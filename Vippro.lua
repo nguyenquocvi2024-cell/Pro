@@ -1,47 +1,59 @@
 local Kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Kavo.CreateLib("VĨ LỎ - PRO VIP", "DarkTheme")
 
-spawn(function()
-    while task.wait(1) do
-        local MainFrame = game:GetService("CoreGui"):FindFirstChild("VĨ LỎ - PRO VIP")
-        if MainFrame and MainFrame:FindFirstChild("Main") then
-            MainFrame.Main.Active = true
-            MainFrame.Main.Draggable = true 
-            break
-        end
-    end
-end)
-
-local ScreenGui = Instance.new("ScreenGui")
-local ToggleButton = Instance.new("TextButton")
-local UICorner = Instance.new("UICorner")
-
-ScreenGui.Parent = game.CoreGui
-ToggleButton.Parent = ScreenGui
-ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-ToggleButton.BackgroundTransparency = 0.4
-ToggleButton.Position = UDim2.new(0, 10, 0, 200)
-ToggleButton.Size = UDim2.new(0, 70, 0, 40)
-ToggleButton.Text = "VĨ LỎ"
-ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
-ToggleButton.Active = true
-ToggleButton.Draggable = true 
-
-UICorner.Parent = ToggleButton
-
-ToggleButton.MouseButton1Click:Connect(function()
-    local target = game:GetService("CoreGui"):FindFirstChild("VĨ LỎ - PRO VIP")
-    if target then
-        target.Enabled = not target.Enabled
-    end
-end)
+local coreGui = game:GetService("CoreGui")
+local runService = game:GetService("RunService")
+local LP = game.Players.LocalPlayer
+local Camera = game.Workspace.CurrentCamera
 
 _G.ESP_Enabled = false
 _G.Fly_Enabled = false
 _G.Aimbot_Enabled = false
 _G.FlySpeed = 50
-local LP = game.Players.LocalPlayer
-local Camera = game.Workspace.CurrentCamera
+
+spawn(function()
+    while true do
+        local main = coreGui:FindFirstChild("VĨ LỎ - PRO VIP")
+        if main and main:FindFirstChild("Main") then
+            main.Main.Active = true
+            main.Main.Draggable = true
+            main.DisplayOrder = 100
+            break
+        end
+        task.wait(0.5)
+    end
+end)
+
+local sg = Instance.new("ScreenGui")
+local btn = Instance.new("TextButton")
+local ui = Instance.new("UICorner")
+
+sg.Name = "ViloControlFix"
+sg.Parent = coreGui
+sg.DisplayOrder = 999
+
+btn.Name = "ToggleButton"
+btn.Parent = sg
+btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+btn.BackgroundTransparency = 0.3
+btn.Position = UDim2.new(0, 10, 0, 150)
+btn.Size = UDim2.new(0, 80, 0, 40)
+btn.Text = "ẨN/HIỆN"
+btn.TextColor3 = Color3.fromRGB(0, 255, 0)
+btn.TextSize = 14
+btn.Font = Enum.Font.SourceSansBold
+btn.Active = true
+btn.Draggable = true
+
+ui.CornerRadius = UDim.new(0, 10)
+ui.Parent = btn
+
+btn.MouseButton1Click:Connect(function()
+    local target = coreGui:FindFirstChild("VĨ LỎ - PRO VIP")
+    if target then
+        target.Enabled = not target.Enabled
+    end
+end)
 
 local Tab1 = Window:NewTab("🎮 Main")
 local SecPOV = Tab1:NewSection("Tầm Nhìn & Aim")
@@ -89,7 +101,7 @@ SecFly:NewToggle("Bật ESP", "", function(state)
     _G.ESP_Enabled = state
 end)
 
-game:GetService("RunService").RenderStepped:Connect(function()
+runService.RenderStepped:Connect(function()
     if _G.ESP_Enabled then
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= LP and v.Character then
