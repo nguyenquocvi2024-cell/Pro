@@ -1,104 +1,96 @@
-local Kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Kavo.CreateLib("VĨ LỎ - PRO VIP", "DarkTheme")
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local coreGui = game:GetService("CoreGui")
-local runService = game:GetService("RunService")
-local LP = game.Players.LocalPlayer
-local Camera = game.Workspace.CurrentCamera
+local Window = Rayfield:CreateWindow({
+   Name = "VĨ LỎ - PRO VIP",
+   LoadingTitle = "Đang Tải Script...",
+   LoadingSubtitle = "by Vĩ Lỏ",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   KeySystem = false
+})
 
 _G.ESP_Enabled = false
 _G.Fly_Enabled = false
 _G.Aimbot_Enabled = false
 _G.FlySpeed = 50
+local LP = game.Players.LocalPlayer
+local Camera = game.Workspace.CurrentCamera
 
-spawn(function()
-    while true do
-        local main = coreGui:FindFirstChild("VĨ LỎ - PRO VIP")
-        if main and main:FindFirstChild("Main") then
-            main.Main.Active = true
-            main.Main.Draggable = true
-            main.DisplayOrder = 100
-            break
-        end
-        task.wait(0.5)
-    end
-end)
+local Tab1 = Window:CreateTab("🎮 Main", 4483362458)
+local SecAim = Tab1:CreateSection("Aimbot & POV")
 
-local sg = Instance.new("ScreenGui")
-sg.Name = "ViloControlFix"
-sg.Parent = coreGui
-sg.DisplayOrder = 999
+Tab1:CreateInput({
+   Name = "Nhập POV (50-120)",
+   PlaceholderText = "Mặc định: 70",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+      local num = tonumber(Text)
+      if num then Camera.FieldOfView = num end
+   end,
+})
 
-local btn = Instance.new("TextButton")
-btn.Parent = sg
-btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-btn.BackgroundTransparency = 0.2
-btn.Position = UDim2.new(0, 10, 0, 150)
-btn.Size = UDim2.new(0, 90, 0, 45)
-btn.Text = "ẨN/HIỆN"
-btn.TextColor3 = Color3.fromRGB(0, 255, 0)
-btn.TextSize = 15
-btn.Active = true
-btn.Draggable = true
-local ui = Instance.new("UICorner")
-ui.Parent = btn
+Tab1:CreateToggle({
+   Name = "Bật Aimbot",
+   CurrentValue = false,
+   Flag = "Aimbot",
+   Callback = function(Value)
+      _G.Aimbot_Enabled = Value
+   end,
+})
 
-btn.MouseButton1Click:Connect(function()
-    local target = coreGui:FindFirstChild("VĨ LỎ - PRO VIP")
-    if target then
-        target.Enabled = not target.Enabled
-    end
-end)
+local Tab2 = Window:CreateTab("🦅 Chức Năng", 4483362458)
+local SecFly = Tab2:CreateSection("Bay & ESP")
 
-local Tab1 = Window:NewTab("🎮 Main")
-local SecPOV = Tab1:NewSection("Tầm Nhìn & Aim")
-
-SecPOV:NewTextBox("Nhập POV (50-120)", "", function(txt)
-    local num = tonumber(txt)
-    if num then Camera.FieldOfView = num end
-end)
-
-SecPOV:NewToggle("Bật Aimbot", "", function(state)
-    _G.Aimbot_Enabled = state
-end)
-
-local Tab2 = Window:NewTab("🦅 Fly & ESP")
-local SecFly = Tab2:NewSection("Chức Năng VIP")
-
-SecFly:NewToggle("Bật Fly", "", function(state)
-    _G.Fly_Enabled = state
-    if state then
-        local bg = Instance.new("BodyGyro", LP.Character.HumanoidRootPart)
-        local bv = Instance.new("BodyVelocity", LP.Character.HumanoidRootPart)
-        bg.P = 9e4; bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-        bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
-        spawn(function()
+Tab2:CreateToggle({
+   Name = "Bật Fly",
+   CurrentValue = false,
+   Flag = "Fly",
+   Callback = function(Value)
+      _G.Fly_Enabled = Value
+      if Value then
+         local bg = Instance.new("BodyGyro", LP.Character.HumanoidRootPart)
+         local bv = Instance.new("BodyVelocity", LP.Character.HumanoidRootPart)
+         bg.P = 9e4; bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+         bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+         spawn(function()
             while _G.Fly_Enabled do
-                task.wait()
-                if LP.Character and LP.Character:FindFirstChild("Humanoid") then
-                    LP.Character.Humanoid.PlatformStand = true
-                    bv.velocity = Camera.CFrame.LookVector * _G.FlySpeed
-                    bg.cframe = Camera.CFrame
-                end
+               task.wait()
+               if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+                  LP.Character.Humanoid.PlatformStand = true
+                  bv.velocity = Camera.CFrame.LookVector * _G.FlySpeed
+                  bg.cframe = Camera.CFrame
+               end
             end
             bv:Destroy(); bg:Destroy()
             if LP.Character and LP.Character:FindFirstChild("Humanoid") then
-                LP.Character.Humanoid.PlatformStand = false
+               LP.Character.Humanoid.PlatformStand = false
             end
-        end)
-    end
-end)
+         end)
+      end
+   end,
+})
 
-SecFly:NewTextBox("Nhập Tốc Độ Fly (10-300)", "", function(txt)
-    local num = tonumber(txt)
-    if num then _G.FlySpeed = num end
-end)
+Tab2:CreateInput({
+   Name = "Nhập Tốc Độ Fly (10-300)",
+   PlaceholderText = "Nhập số...",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+      local num = tonumber(Text)
+      if num then _G.FlySpeed = num end
+   end,
+})
 
-SecFly:NewToggle("Bật ESP", "", function(state)
-    _G.ESP_Enabled = state
-end)
+Tab2:CreateToggle({
+   Name = "Bật ESP (Soi Đỏ)",
+   CurrentValue = false,
+   Flag = "ESP",
+   Callback = function(Value)
+      _G.ESP_Enabled = Value
+   end,
+})
 
-runService.RenderStepped:Connect(function()
+game:GetService("RunService").RenderStepped:Connect(function()
     if _G.ESP_Enabled then
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= LP and v.Character then
