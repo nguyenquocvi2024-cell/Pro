@@ -1,42 +1,31 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "HẮC KỶ TỬ - PRO VIP",
-   LoadingTitle = "Đang Tải Hệ Thống...",
-   LoadingSubtitle = "by Nguyễn Vĩ",
-   ConfigurationSaving = { Enabled = false },
+   Name = "VĨ LỎ - PRO VIP",
+   LoadingTitle = "Đang Tải Script...",
+   LoadingSubtitle = "by Vĩ Lỏ",
+   ConfigurationSaving = {
+      Enabled = false
+   },
    KeySystem = false
 })
 
-local LP = game.Players.LocalPlayer
-local Camera = game.Workspace.CurrentCamera
 _G.ESP_Enabled = false
 _G.Fly_Enabled = false
 _G.Aimbot_Enabled = false
 _G.FlySpeed = 50
+_G.FullBright_Enabled = false -- Biến cho nhìn trong tối
 
--- Fix lỗi kéo thả: Ép khung Menu luôn có thể di chuyển
-spawn(function()
-    while task.wait(1) do
-        local gui = game:GetService("CoreGui"):FindFirstChild("Rayfield")
-        if gui then
-            for _, v in pairs(gui:GetDescendants()) do
-                if v:IsA("Frame") and v.Name == "Main" then
-                    v.Active = true
-                    v.Draggable = true
-                end
-            end
-            break
-        end
-    end
-end)
+local LP = game.Players.LocalPlayer
+local Camera = game.Workspace.CurrentCamera
+local Lighting = game:GetService("Lighting")
 
 local Tab1 = Window:CreateTab("🎮 Main", 4483362458)
-local SecAim = Tab1:CreateSection("Tùy Chỉnh Tầm Nhìn (POV)")
+local SecAim = Tab1:CreateSection("Tự Ngắm & Ánh Sáng")
 
 Tab1:CreateInput({
-   Name = "Chỉnh POV (FOV)",
-   PlaceholderText = "Nhập số (VD: 100)",
+   Name = "Nhập POV (50-120)",
+   PlaceholderText = "Mặc định: 70",
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
@@ -45,21 +34,45 @@ Tab1:CreateInput({
 })
 
 Tab1:CreateToggle({
-   Name = "Bật/Tắt Aimbot",
+   Name = "Bật/Tắt Nhìn Trong Bóng Tối",
    CurrentValue = false,
-   Flag = "AimToggle",
+   Flag = "FullBright",
+   Callback = function(Value)
+      _G.FullBright_Enabled = Value
+      if Value then
+         Lighting.Brightness = 2
+         Lighting.ClockTime = 14
+         Lighting.FogEnd = 100000
+         Lighting.GlobalShadows = false
+         Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+         Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+      else
+         Lighting.Brightness = 1
+         Lighting.ClockTime = 12
+         Lighting.FogEnd = 10000
+         Lighting.GlobalShadows = true
+         Lighting.Ambient = Color3.fromRGB(127, 127, 127)
+         Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+      end
+   end,
+})
+
+Tab1:CreateToggle({
+   Name = "Bật Aimbot",
+   CurrentValue = false,
+   Flag = "Aimbot",
    Callback = function(Value)
       _G.Aimbot_Enabled = Value
    end,
 })
 
-local Tab2 = Window:CreateTab("🦅 Fly & ESP", 4483362458)
-local SecPro = Tab2:CreateSection("Chức Năng VIP")
+local Tab2 = Window:CreateTab("🦅 Chức Năng", 4483362458)
+local SecFly = Tab2:CreateSection("Bay & ESP")
 
 Tab2:CreateToggle({
    Name = "Bật Fly",
    CurrentValue = false,
-   Flag = "FlyToggle",
+   Flag = "Fly",
    Callback = function(Value)
       _G.Fly_Enabled = Value
       if Value then
@@ -72,9 +85,9 @@ Tab2:CreateToggle({
                task.wait()
                if LP.Character and LP.Character:FindFirstChild("Humanoid") then
                   LP.Character.Humanoid.PlatformStand = true
-                  bv.velocity = Camera.CFrame.LookVector * _G.FlySpeed
-                  bg.cframe = Camera.CFrame
-               end
+                    bv.velocity = Camera.CFrame.LookVector * _G.FlySpeed
+                    bg.cframe = Camera.CFrame
+                end
             end
             bv:Destroy(); bg:Destroy()
             if LP.Character and LP.Character:FindFirstChild("Humanoid") then
@@ -87,7 +100,7 @@ Tab2:CreateToggle({
 
 Tab2:CreateInput({
    Name = "Nhập Tốc Độ Fly (10-300)",
-   PlaceholderText = "Nhập số tốc độ...",
+   PlaceholderText = "Nhập số...",
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
@@ -96,15 +109,14 @@ Tab2:CreateInput({
 })
 
 Tab2:CreateToggle({
-   Name = "Bật ESP",
+   Name = "Bật ESP (Soi Đỏ)",
    CurrentValue = false,
-   Flag = "EspToggle",
+   Flag = "ESP",
    Callback = function(Value)
       _G.ESP_Enabled = Value
    end,
 })
 
--- Hệ thống xử lý vòng lặp (RenderStepped)
 game:GetService("RunService").RenderStepped:Connect(function()
     if _G.ESP_Enabled then
         for _, v in pairs(game.Players:GetPlayers()) do
