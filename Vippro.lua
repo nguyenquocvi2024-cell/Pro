@@ -1,46 +1,41 @@
---[[
-    SCRIPT: VĨ LỎ MENU - SIÊU FIX NÚT ẨN HIỆN
-    - Nút ẨN/HIỆN có thể cầm kéo di chuyển khắp màn hình
-    - Fix lỗi bấm nút không tắt được Menu
-    - Giữ nguyên các tính năng Fly, ESP, Aim, POV
-]]
-
 local Kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Kavo.CreateLib("VĨ LỎ - PRO VIP", "DarkTheme")
 
--- --- TẠO NÚT ẨN/HIỆN DI CHUYỂN ĐƯỢC ---
+spawn(function()
+    while task.wait(1) do
+        local MainFrame = game:GetService("CoreGui"):FindFirstChild("VĨ LỎ - PRO VIP")
+        if MainFrame and MainFrame:FindFirstChild("Main") then
+            MainFrame.Main.Active = true
+            MainFrame.Main.Draggable = true 
+            break
+        end
+    end
+end)
+
 local ScreenGui = Instance.new("ScreenGui")
 local ToggleButton = Instance.new("TextButton")
 local UICorner = Instance.new("UICorner")
 
 ScreenGui.Parent = game.CoreGui
-ScreenGui.Name = "ViloControl"
-
 ToggleButton.Parent = ScreenGui
 ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-ToggleButton.BackgroundTransparency = 0.3
+ToggleButton.BackgroundTransparency = 0.4
 ToggleButton.Position = UDim2.new(0, 10, 0, 200)
-ToggleButton.Size = UDim2.new(0, 65, 0, 35)
-ToggleButton.Text = "ẨN/HIỆN"
+ToggleButton.Size = UDim2.new(0, 70, 0, 40)
+ToggleButton.Text = "VĨ LỎ"
 ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
-ToggleButton.TextSize = 12
 ToggleButton.Active = true
-ToggleButton.Draggable = true -- Cho phép ní cầm nút kéo đi chỗ khác
+ToggleButton.Draggable = true 
 
-UICorner.CornerRadius = UDim.new(0, 8)
 UICorner.Parent = ToggleButton
 
--- Fix lỗi bấm không ăn: Gọi trực tiếp lệnh đóng/mở của Kavo
 ToggleButton.MouseButton1Click:Connect(function()
-    local coreGui = game:GetService("CoreGui")
-    for _, v in pairs(coreGui:GetChildren()) do
-        if v.Name == "VĨ LỎ - PRO VIP" or v:FindFirstChild("Main") then
-            v.Enabled = not v.Enabled
-        end
+    local target = game:GetService("CoreGui"):FindFirstChild("VĨ LỎ - PRO VIP")
+    if target then
+        target.Enabled = not target.Enabled
     end
 end)
 
--- --- GIỮ NGUYÊN LOGIC HỆ THỐNG ---
 _G.ESP_Enabled = false
 _G.Fly_Enabled = false
 _G.Aimbot_Enabled = false
@@ -48,23 +43,21 @@ _G.FlySpeed = 50
 local LP = game.Players.LocalPlayer
 local Camera = game.Workspace.CurrentCamera
 
--- --- TAB 1: MAIN ---
 local Tab1 = Window:NewTab("🎮 Main")
-local SecPOV = Tab1:NewSection("POV & AIM")
+local SecPOV = Tab1:NewSection("Tầm Nhìn & Aim")
 
-SecPOV:NewSlider("Chỉnh POV", "Tầm nhìn", 120, 50, function(s)
+SecPOV:NewSlider("Chỉnh POV", "", 120, 50, function(s)
     Camera.FieldOfView = s
 end)
 
-SecPOV:NewToggle("Bật Aimbot", "Khóa mục tiêu", function(state)
+SecPOV:NewToggle("Bật Aimbot", "", function(state)
     _G.Aimbot_Enabled = state
 end)
 
--- --- TAB 2: FLY & ESP ---
 local Tab2 = Window:NewTab("🦅 Fly & ESP")
-local SecFly = Tab2:NewSection("Chức Năng")
+local SecFly = Tab2:NewSection("Chức Năng VIP")
 
-SecFly:NewToggle("Bật Fly", "Bay lượn", function(state)
+SecFly:NewToggle("Bật Fly", "", function(state)
     _G.Fly_Enabled = state
     if state then
         local bg = Instance.new("BodyGyro", LP.Character.HumanoidRootPart)
@@ -81,30 +74,41 @@ SecFly:NewToggle("Bật Fly", "Bay lượn", function(state)
                 end
             end
             bv:Destroy(); bg:Destroy()
-            if LP.Character and LP.Character:FindFirstChild("Humanoid") then LP.Character.Humanoid.PlatformStand = false end
+            if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+                LP.Character.Humanoid.PlatformStand = false
+            end
         end)
     end
 end)
 
-SecFly:NewSlider("Tốc Độ Bay", "Speed", 250, 10, function(s) _G.FlySpeed = s end)
+SecFly:NewSlider("Tốc Độ Fly", "", 300, 10, function(s)
+    _G.FlySpeed = s
+end)
 
-SecFly:NewToggle("Bật ESP", "Soi đỏ", function(state) _G.ESP_Enabled = state end)
+SecFly:NewToggle("Bật ESP", "", function(state)
+    _G.ESP_Enabled = state
+end)
 
--- VÒNG LẶP RENDER (GIỮ NGUYÊN ĐỂ KHÔNG LỖI)
 game:GetService("RunService").RenderStepped:Connect(function()
-    for _, v in pairs(game.Players:GetPlayers()) do
-        if v ~= LP and v.Character then
-            local highlight = v.Character:FindFirstChild("ViloHighlight")
-            if _G.ESP_Enabled then
-                if not highlight then
+    if _G.ESP_Enabled then
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= LP and v.Character then
+                if not v.Character:FindFirstChild("ViloHighlight") then
                     local h = Instance.new("Highlight", v.Character)
                     h.Name = "ViloHighlight"
                     h.FillColor = Color3.fromRGB(255, 0, 0)
+                    h.OutlineColor = Color3.fromRGB(255, 255, 255)
                 end
-            elseif highlight then highlight:Destroy() end
+            end
+        end
+    else
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v.Character and v.Character:FindFirstChild("ViloHighlight") then
+                v.Character.ViloHighlight:Destroy()
+            end
         end
     end
-    -- Aimbot Logic
+    
     if _G.Aimbot_Enabled then
         local target = nil
         local dist = 400
@@ -117,6 +121,8 @@ game:GetService("RunService").RenderStepped:Connect(function()
                 end
             end
         end
-        if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) end
+        if target then 
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) 
+        end
     end
 end)
