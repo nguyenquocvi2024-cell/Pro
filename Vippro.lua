@@ -14,6 +14,7 @@ local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+-- Biến lưu trữ (CẤM XÓA)
 _G.ESP_Enabled = false
 _G.Fly_Enabled = false
 _G.Aimbot_Enabled = false
@@ -21,10 +22,20 @@ _G.Noclip_Enabled = false
 _G.InfJump_Enabled = false
 _G.InfAmmo_Enabled = false
 _G.FullBright_Enabled = false
+_G.FOVCircle_Enabled = false
 _G.FlySpeed = 50
 _G.HitboxSize = 2
+_G.FOVSize = 150
 
--- --- NÚT BẬT/TẮT AIM NHANH ---
+-- --- VẼ VÒNG POV (DÂN CHUYÊN NGHIỆP) ---
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 2
+FOVCircle.Color = Color3.fromRGB(0, 255, 0)
+FOVCircle.Filled = false
+FOVCircle.Transparency = 1
+FOVCircle.Visible = false
+
+-- --- NÚT BẬT/TẮT AIM NHANH (FLOAT BUTTON) ---
 local AimGui = Instance.new("ScreenGui")
 local AimBtn = Instance.new("TextButton")
 local AimCorner = Instance.new("UICorner")
@@ -46,36 +57,44 @@ AimBtn.MouseButton1Click:Connect(function()
     AimBtn.BackgroundColor3 = _G.Aimbot_Enabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
 end)
 
--- --- TAB MAIN (ĐẦY ĐỦ AIMBOT & ĐẠN) ---
+-- --- TAB MAIN (FULL TÍNH NĂNG) ---
 local Tab1 = Window:CreateTab("🎮 Main", 4483362458)
-local SecMain = Tab1:CreateSection("Chiến Đấu & Hỗ Trợ")
 
 Tab1:CreateToggle({
-   Name = "Bật/Tắt Aimbot",
+   Name = "Bật Vòng POV (Vùng Aim)",
    CurrentValue = false,
-   Flag = "AimToggle",
-   Callback = function(Value)
-      _G.Aimbot_Enabled = Value
-      AimBtn.Text = Value and "AIM: ON" or "AIM: OFF"
-      AimBtn.BackgroundColor3 = Value and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+   Callback = function(v) _G.FOVCircle_Enabled = v; FOVCircle.Visible = v end,
+})
+
+Tab1:CreateInput({
+   Name = "Kích Thước Vòng Aim",
+   PlaceholderText = "Mặc định 150...",
+   Callback = function(t) if tonumber(t) then _G.FOVSize = tonumber(t) end end,
+})
+
+Tab1:CreateToggle({
+   Name = "Bật Aimbot (Trong Vòng POV)",
+   CurrentValue = false,
+   Callback = function(v) 
+      _G.Aimbot_Enabled = v 
+      AimBtn.Text = v and "AIM: ON" or "AIM: OFF"
+      AimBtn.BackgroundColor3 = v and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
    end,
 })
 
 Tab1:CreateToggle({
-   Name = "Vô Hạn Đạn (Fix Arsenal & All Map)",
+   Name = "Vô Hạn Đạn (Arsenal Hook)",
    CurrentValue = false,
-   Flag = "InfAmmo",
-   Callback = function(Value)
-      _G.InfAmmo_Enabled = Value
-      -- Cơ chế Hook Metatable cực mạnh để fix Arsenal
-      if Value then
-          local old
-          old = hookmetamethod(game, "__index", function(self, key)
-              if _G.InfAmmo_Enabled and (key == "Ammo" or key == "Clip" or key == "CurrentAmmo") then
-                  return 999
-              end
-              return old(self, key)
-          end)
+   Callback = function(v)
+      _G.InfAmmo_Enabled = v
+      if v then
+         local old
+         old = hookmetamethod(game, "__index", function(self, key)
+            if _G.InfAmmo_Enabled and (key == "Ammo" or key == "Clip" or key == "CurrentAmmo") then
+               return 999
+            end
+            return old(self, key)
+         end)
       end
    end,
 })
@@ -83,52 +102,32 @@ Tab1:CreateToggle({
 Tab1:CreateInput({
    Name = "Mở Rộng Hitbox (0-300)",
    PlaceholderText = "Nhập số...",
-   Callback = function(Text)
-      local num = tonumber(Text)
-      if num then _G.HitboxSize = num end
-   end,
+   Callback = function(t) if tonumber(t) then _G.HitboxSize = tonumber(t) end end,
 })
 
 Tab1:CreateToggle({
-   Name = "Bật Infinity Jump",
+   Name = "Infinity Jump",
    CurrentValue = false,
    Callback = function(v) _G.InfJump_Enabled = v end,
 })
 
 Tab1:CreateToggle({
-   Name = "Bật Noclip (Xuyên Tường)",
+   Name = "Noclip (Xuyên Tường)",
    CurrentValue = false,
    Callback = function(v) _G.Noclip_Enabled = v end,
-})
-
-Tab1:CreateToggle({
-   Name = "Bật Nhìn Đêm (FullBright)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.FullBright_Enabled = Value
-      if Value then
-         Lighting.Brightness = 2
-         Lighting.ClockTime = 14
-         Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-      else
-         Lighting.Brightness = 1
-         Lighting.ClockTime = 12
-         Lighting.Ambient = Color3.fromRGB(127, 127, 127)
-      end
-   end,
 })
 
 -- --- TAB SPEED & JUMP ---
 local TabSpeed = Window:CreateTab("⚡ Speed & Jump", 4483362458)
 TabSpeed:CreateInput({
-   Name = "WalkSpeed (Tốc Độ Chạy)",
+   Name = "Chạy Nhanh (WalkSpeed)",
    PlaceholderText = "16",
-   Callback = function(t) if tonumber(t) then LP.Character.Humanoid.WalkSpeed = tonumber(t) end end,
+   Callback = function(t) if tonumber(t) and LP.Character then LP.Character.Humanoid.WalkSpeed = tonumber(t) end end,
 })
 TabSpeed:CreateInput({
-   Name = "JumpPower (Độ Cao Nhảy)",
+   Name = "Nhảy Cao (JumpPower)",
    PlaceholderText = "50",
-   Callback = function(t) if tonumber(t) then LP.Character.Humanoid.JumpPower = tonumber(t) end end,
+   Callback = function(t) if tonumber(t) and LP.Character then LP.Character.Humanoid.JumpPower = tonumber(t) end end,
 })
 
 -- --- TAB FLY & ESP ---
@@ -171,49 +170,16 @@ Tab2:CreateInput({
    Callback = function(t) if tonumber(t) then _G.FlySpeed = tonumber(t) end end,
 })
 
--- --- HỆ THỐNG VÒNG LẶP XỬ LÝ FIX LỖI ---
-RunService.Stepped:Connect(function()
-    -- Noclip
-    if _G.Noclip_Enabled and LP.Character then
-        for _, v in pairs(LP.Character:GetDescendants()) do
-            if v:IsA("BasePart") then v.CanCollide = false end
-        end
-    end
-    -- ESP Fix
-    if _G.ESP_Enabled then
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= LP and v.Character and not v.Character:FindFirstChild("Highlight") then
-                local h = Instance.new("Highlight", v.Character)
-                h.FillColor = Color3.fromRGB(255, 0, 0)
-            end
-        end
-    end
-    -- Vô hạn đạn (Dành cho game thường)
-    if _G.InfAmmo_Enabled and LP.Character then
-        for _, tool in pairs(LP.Character:GetChildren()) do
-            if tool:IsA("Tool") then
-                for _, v in pairs(tool:GetDescendants()) do
-                    if v:IsA("IntValue") and (v.Name == "Ammo" or v.Name == "Clip") then
-                        v.Value = 999
-                    end
-                end
-            end
-        end
-    end
-end)
-
+-- --- HỆ THỐNG VÒNG LẶP XỬ LÝ (KHÔNG CẮT) ---
 RunService.RenderStepped:Connect(function()
-    -- Hitbox
-    for _, v in pairs(game.Players:GetPlayers()) do
-        if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-            v.Character.HumanoidRootPart.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
-            v.Character.HumanoidRootPart.Transparency = 0.8
-        end
-    end
-    -- Aimbot Fix: Lock chuẩn & Mượt
+    -- Vòng POV theo tâm màn hình
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    FOVCircle.Radius = _G.FOVSize
+    
+    -- Aimbot tích hợp vùng POV
     if _G.Aimbot_Enabled then
         local target = nil
-        local dist = 400
+        local dist = _G.FOVSize
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= LP and v.Character and v.Character:FindFirstChild("Head") then
                 local pos, onScreen = Camera:WorldToScreenPoint(v.Character.Head.Position)
@@ -223,15 +189,39 @@ RunService.RenderStepped:Connect(function()
                 end
             end
         end
-        if target then 
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) 
+        if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) end
+    end
+
+    -- Hitbox & ESP (Highlight)
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            v.Character.HumanoidRootPart.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
+            if _G.ESP_Enabled and not v.Character:FindFirstChild("Highlight") then
+                local h = Instance.new("Highlight", v.Character)
+                h.FillColor = Color3.fromRGB(255, 0, 0)
+            end
         end
     end
 end)
 
--- Infinity Jump
-UserInputService.JumpRequest:Connect(function()
-    if _G.InfJump_Enabled and LP.Character then
-        LP.Character.Humanoid:ChangeState("Jumping")
+RunService.Stepped:Connect(function()
+    if _G.Noclip_Enabled and LP.Character then
+        for _, v in pairs(LP.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
     end
+    -- Vô hạn đạn quét Tool
+    if _G.InfAmmo_Enabled and LP.Character then
+        for _, tool in pairs(LP.Character:GetChildren()) do
+            if tool:IsA("Tool") then
+                for _, v in pairs(tool:GetDescendants()) do
+                    if v:IsA("IntValue") and (v.Name == "Ammo" or v.Name == "Clip") then v.Value = 999 end
+                end
+            end
+        end
+    end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if _G.InfJump_Enabled and LP.Character then LP.Character.Humanoid:ChangeState("Jumping") end
 end)
