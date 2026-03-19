@@ -1,103 +1,116 @@
 --[[
-    SCRIPT: PRO VIP MENU (FOV, AIMBOT CIRCLE, FLY, ESP)
-    Dành cho: Nguyễn Vĩ - GitHub/Pro
+    SCRIPT: VĨ LỎ MENU (Fix Ẩn/Hiện + Fly + ESP + Aim)
+    Update: 19/03/2026
 ]]
 
 local Kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Kavo.CreateLib("HẮC KỶ TỬ - PRO VIP", "DarkTheme")
+-- Sửa tên thành VĨ LỎ nè má
+local Window = Kavo.CreateLib("VĨ LỎ - PRO VIP", "DarkTheme")
 
--- --- BIẾN CẤU HÌNH ---
-local LP = game.Players.LocalPlayer
-local Mouse = LP:GetMouse()
-local Camera = game.Workspace.CurrentCamera
-local RunService = game:GetService("RunService")
+-- --- TẠO NÚT ẨN/HIỆN MENU (Dành riêng cho điện thoại) ---
+local ScreenGui = Instance.new("ScreenGui")
+local ToggleButton = Instance.new("TextButton")
 
+ScreenGui.Parent = game.CoreGui
+ToggleButton.Parent = ScreenGui
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ToggleButton.Position = UDim2.new(0, 10, 0, 150) -- Vị trí nút bên trái màn hình
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Text = "VĨ LỎ"
+ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+ToggleButton.TextSize = 12
+
+-- Bo tròn cái nút cho đẹp
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 25)
+UICorner.Parent = ToggleButton
+
+ToggleButton.MouseButton1Click:Connect(function()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
+end)
+
+-- --- CẤU HÌNH ---
+_G.ESP_Enabled = false
+_G.Fly_Enabled = false
 _G.Aimbot_Enabled = false
-_G.Aim_Radius = 100 -- Bán kính vòng tròn Aim
-_G.TeamCheck = true
-_G.TargetPart = "HumanoidRootPart"
-
--- Tạo vòng tròn FOV cho Aimbot
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Thickness = 2
-FOVCircle.Color = Color3.fromRGB(255, 0, 0)
-FOVCircle.Filled = false
-FOVCircle.Transparency = 1
-FOVCircle.Visible = false
+_G.FlySpeed = 50
+local LP = game.Players.LocalPlayer
+local Camera = game.Workspace.CurrentCamera
 
 -- --- TABS ---
-local TabMain = Window:NewTab("🎮 Main")
-local SecPOV = TabMain:NewSection("Tùy Chỉnh Tầm Nhìn (POV)")
-local SecAim = TabMain:NewSection("Aimbot (Vòng Tròn)")
+local Tab1 = Window:NewTab("🎮 Main")
+local SecPOV = Tab1:NewSection("POV & Aimbot")
 
-local TabFly = Window:NewTab("🦅 Fly & ESP")
-local SecFly = TabFly:NewSection("Bay & Định Vị")
+local Tab2 = Window:NewTab("🦅 Fly & ESP")
+local SecFly = Tab2:NewSection("Bay & Định Vị")
 
--- --- LOGIC POV (FOV) ---
-SecPOV:NewSlider("Chỉnh POV (FOV)", "Chỉnh tầm nhìn xa gần", 100, 20, function(s)
+-- --- LOGIC POV ---
+SecPOV:NewSlider("Chỉnh POV (FOV)", "Tầm nhìn rộng", 120, 20, function(s)
     Camera.FieldOfView = s
 end)
 
--- --- LOGIC AIMBOT VỚI VÒNG TRÒN ---
-local function GetClosestToMouse()
-    local target = nil
-    local dist = _G.Aim_Radius
-
-    for _, v in pairs(game.Players:GetPlayers()) do
-        if v ~= LP and v.Character and v.Character:FindFirstChild(_G.TargetPart) then
-            if _G.TeamCheck and v.Team == LP.Team then continue end
-            
-            local screenPos, onScreen = Camera:WorldToScreenPoint(v.Character[_G.TargetPart].Position)
-            if onScreen then
-                local mouseDist = (Vector2.new(mouse.X, mouse.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
-                if mouseDist < dist then
-                    target = v
-                    dist = mouseDist
-                end
-            end
-        end
-    end
-    return target
-end
-
-RunService.RenderStepped:Connect(function()
-    -- Cập nhật vị trí vòng tròn theo chuột
-    FOVCircle.Position = Vector2.new(mouse.X, mouse.Y + 36)
-    FOVCircle.Radius = _G.Aim_Radius
-    
-    if _G.Aimbot_Enabled then
-        local target = GetClosestToMouse()
-        if target and target.Character then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character[_G.TargetPart].Position)
-        end
-    end
-end)
-
-SecAim:NewToggle("Bật/Tắt Aimbot", "Tự khóa mục tiêu", function(state)
+-- --- LOGIC AIMBOT ---
+SecPOV:NewToggle("Bật/Tắt Aimbot", "Tự khóa mục tiêu", function(state)
     _G.Aimbot_Enabled = state
 end)
 
-SecAim:NewToggle("Hiện Vòng Tròn Aim", "Hiện phạm vi ngắm", function(state)
-    FOVCircle.Visible = state
+game:GetService("RunService").RenderStepped:Connect(function()
+    if _G.Aimbot_Enabled then
+        local target = nil
+        local dist = 500 -- Khoảng cách quét
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= LP and v.Character and v.Character:FindFirstChild("Head") then
+                local screenPos, onScreen = Camera:WorldToScreenPoint(v.Character.Head.Position)
+                if onScreen then
+                    local d = (Vector2.new(game.Players.LocalPlayer:GetMouse().X, game.Players.LocalPlayer:GetMouse().Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                    if d < dist then target = v; dist = d end
+                end
+            end
+        end
+        if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) end
+    end
 end)
 
-SecAim:NewSlider("Bán Kính Vòng Aim", "Phạm vi nhận diện mục tiêu", 300, 20, function(s)
-    _G.Aim_Radius = s
-end)
-
-SecAim:NewDropdown("Mục Tiêu Nhắm", "Đầu hoặc Thân", {"HumanoidRootPart", "Head"}, function(opt)
-    _G.TargetPart = opt
-end)
-
--- --- LOGIC FLY & ESP (Rút gọn cho nhẹ) ---
-SecFly:NewToggle("Bật Fly (F)", "Bay lượn", function(state)
+-- --- LOGIC FLY ---
+SecFly:NewToggle("Bật Fly", "Bay vèo vèo", function(state)
     _G.Fly_Enabled = state
-    -- Code xử lý Fly tui đã tối ưu ở bản trước, ní cứ thế dán vào nhé!
+    if state then
+        local bg = Instance.new("BodyGyro", LP.Character.HumanoidRootPart)
+        local bv = Instance.new("BodyVelocity", LP.Character.HumanoidRootPart)
+        bg.P = 9e4; bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+        spawn(function()
+            while _G.Fly_Enabled do
+                wait()
+                LP.Character.Humanoid.PlatformStand = true
+                bv.velocity = Camera.CFrame.LookVector * _G.FlySpeed
+                bg.cframe = Camera.CFrame
+            end
+            bv:Destroy(); bg:Destroy()
+            LP.Character.Humanoid.PlatformStand = false
+        end)
+    end
 end)
 
-SecFly:NewToggle("Bật ESP", "Hiện khung người chơi", function(state)
+SecFly:NewSlider("Tốc Độ Bay", "Bay nhanh chậm", 300, 10, function(s) _G.FlySpeed = s end)
+
+-- --- LOGIC ESP ---
+SecFly:NewToggle("Bật ESP", "Nhìn xuyên tường", function(state)
     _G.ESP_Enabled = state
-    -- Code ESP tui đã tích hợp sẵn vào vòng lặp quét người chơi
+    game:GetService("RunService").RenderStepped:Connect(function()
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= LP and v.Character then
+                local esp = v.Character:FindFirstChild("ViloESP")
+                if _G.ESP_Enabled then
+                    if not esp then
+                        local h = Instance.new("Highlight", v.Character)
+                        h.Name = "ViloESP"
+                        h.FillColor = Color3.fromRGB(255, 0, 0) -- Màu đỏ cho nó gắt
+                    end
+                else
+                    if esp then esp:Destroy() end
+                end
+            end
+        end
+    end)
 end)
-
-print("✅ PRO VIP LOADED! SÀI NGON LẮM NÍ ƠI!")
