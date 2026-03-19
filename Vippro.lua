@@ -25,27 +25,22 @@ spawn(function()
 end)
 
 local sg = Instance.new("ScreenGui")
-local btn = Instance.new("TextButton")
-local ui = Instance.new("UICorner")
-
 sg.Name = "ViloControlFix"
 sg.Parent = coreGui
 sg.DisplayOrder = 999
 
-btn.Name = "ToggleButton"
+local btn = Instance.new("TextButton")
 btn.Parent = sg
 btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-btn.BackgroundTransparency = 0.3
+btn.BackgroundTransparency = 0.2
 btn.Position = UDim2.new(0, 10, 0, 150)
-btn.Size = UDim2.new(0, 80, 0, 40)
+btn.Size = UDim2.new(0, 90, 0, 45)
 btn.Text = "ẨN/HIỆN"
 btn.TextColor3 = Color3.fromRGB(0, 255, 0)
-btn.TextSize = 14
-btn.Font = Enum.Font.SourceSansBold
+btn.TextSize = 15
 btn.Active = true
 btn.Draggable = true
-
-ui.CornerRadius = UDim.new(0, 10)
+local ui = Instance.new("UICorner")
 ui.Parent = btn
 
 btn.MouseButton1Click:Connect(function()
@@ -58,8 +53,9 @@ end)
 local Tab1 = Window:NewTab("🎮 Main")
 local SecPOV = Tab1:NewSection("Tầm Nhìn & Aim")
 
-SecPOV:NewSlider("Chỉnh POV", "", 120, 50, function(s)
-    Camera.FieldOfView = s
+SecPOV:NewTextBox("Nhập POV (50-120)", "", function(txt)
+    local num = tonumber(txt)
+    if num then Camera.FieldOfView = num end
 end)
 
 SecPOV:NewToggle("Bật Aimbot", "", function(state)
@@ -93,8 +89,9 @@ SecFly:NewToggle("Bật Fly", "", function(state)
     end
 end)
 
-SecFly:NewSlider("Tốc Độ Fly", "", 300, 10, function(s)
-    _G.FlySpeed = s
+SecFly:NewTextBox("Nhập Tốc Độ Fly (10-300)", "", function(txt)
+    local num = tonumber(txt)
+    if num then _G.FlySpeed = num end
 end)
 
 SecFly:NewToggle("Bật ESP", "", function(state)
@@ -109,7 +106,6 @@ runService.RenderStepped:Connect(function()
                     local h = Instance.new("Highlight", v.Character)
                     h.Name = "ViloHighlight"
                     h.FillColor = Color3.fromRGB(255, 0, 0)
-                    h.OutlineColor = Color3.fromRGB(255, 255, 255)
                 end
             end
         end
@@ -133,8 +129,6 @@ runService.RenderStepped:Connect(function()
                 end
             end
         end
-        if target then 
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) 
-        end
+        if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) end
     end
 end)
