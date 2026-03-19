@@ -1,43 +1,46 @@
 --[[
-    SCRIPT: VĨ LỎ MENU FINAL FIX
-    - Hỗ trợ kéo thả Menu (Draggable)
-    - Fix Slider & ESP Highlight
-    - Nút Ẩn/Hiện chuyên nghiệp
+    SCRIPT: VĨ LỎ MENU - SIÊU FIX NÚT ẨN HIỆN
+    - Nút ẨN/HIỆN có thể cầm kéo di chuyển khắp màn hình
+    - Fix lỗi bấm nút không tắt được Menu
+    - Giữ nguyên các tính năng Fly, ESP, Aim, POV
 ]]
 
 local Kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Kavo.CreateLib("VĨ LỎ - PRO VIP", "DarkTheme")
 
--- --- FIX KÉO THẢ MENU (Cho điện thoại đứng im) ---
--- Tính năng này giúp ní có thể chạm vào thanh tiêu đề để di chuyển Menu
-for _, v in pairs(game:GetService("CoreGui"):GetChildren()) do
-    if v:FindFirstChild("Main") then
-        local main = v.Main
-        main.Active = true
-        main.Draggable = true -- Cho phép kéo thả tự do
-    end
-end
-
--- --- NÚT ẨN/HIỆN (VỊ TRÍ MỚI) ---
+-- --- TẠO NÚT ẨN/HIỆN DI CHUYỂN ĐƯỢC ---
 local ScreenGui = Instance.new("ScreenGui")
 local ToggleButton = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
+
 ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "ViloControl"
+
 ToggleButton.Parent = ScreenGui
-ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-ToggleButton.BorderSizePixel = 2
-ToggleButton.Position = UDim2.new(0, 5, 0, 200)
-ToggleButton.Size = UDim2.new(0, 60, 0, 40)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ToggleButton.BackgroundTransparency = 0.3
+ToggleButton.Position = UDim2.new(0, 10, 0, 200)
+ToggleButton.Size = UDim2.new(0, 65, 0, 35)
 ToggleButton.Text = "ẨN/HIỆN"
 ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
-ToggleButton.TextSize = 10
-local UICorner = Instance.new("UICorner")
+ToggleButton.TextSize = 12
+ToggleButton.Active = true
+ToggleButton.Draggable = true -- Cho phép ní cầm nút kéo đi chỗ khác
+
+UICorner.CornerRadius = UDim.new(0, 8)
 UICorner.Parent = ToggleButton
 
+-- Fix lỗi bấm không ăn: Gọi trực tiếp lệnh đóng/mở của Kavo
 ToggleButton.MouseButton1Click:Connect(function()
-    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
+    local coreGui = game:GetService("CoreGui")
+    for _, v in pairs(coreGui:GetChildren()) do
+        if v.Name == "VĨ LỎ - PRO VIP" or v:FindFirstChild("Main") then
+            v.Enabled = not v.Enabled
+        end
+    end
 end)
 
--- --- BIẾN HỆ THỐNG ---
+-- --- GIỮ NGUYÊN LOGIC HỆ THỐNG ---
 _G.ESP_Enabled = false
 _G.Fly_Enabled = false
 _G.Aimbot_Enabled = false
@@ -45,23 +48,22 @@ _G.FlySpeed = 50
 local LP = game.Players.LocalPlayer
 local Camera = game.Workspace.CurrentCamera
 
--- --- TAB 1: CHỈNH NHÌN ---
+-- --- TAB 1: MAIN ---
 local Tab1 = Window:NewTab("🎮 Main")
 local SecPOV = Tab1:NewSection("POV & AIM")
 
-SecPOV:NewSlider("Chỉnh POV", "Mở rộng tầm nhìn", 120, 50, function(s)
+SecPOV:NewSlider("Chỉnh POV", "Tầm nhìn", 120, 50, function(s)
     Camera.FieldOfView = s
 end)
 
-SecPOV:NewToggle("Bật Aimbot", "Tự khóa mục tiêu", function(state)
+SecPOV:NewToggle("Bật Aimbot", "Khóa mục tiêu", function(state)
     _G.Aimbot_Enabled = state
 end)
 
--- --- TAB 2: BAY & ESP ---
+-- --- TAB 2: FLY & ESP ---
 local Tab2 = Window:NewTab("🦅 Fly & ESP")
-local SecFly = Tab2:NewSection("Chức Năng Pro")
+local SecFly = Tab2:NewSection("Chức Năng")
 
--- Logic Fly (Đã tối ưu cho di động)
 SecFly:NewToggle("Bật Fly", "Bay lượn", function(state)
     _G.Fly_Enabled = state
     if state then
@@ -72,46 +74,37 @@ SecFly:NewToggle("Bật Fly", "Bay lượn", function(state)
         spawn(function()
             while _G.Fly_Enabled do
                 task.wait()
-                LP.Character.Humanoid.PlatformStand = true
-                bv.velocity = Camera.CFrame.LookVector * _G.FlySpeed
-                bg.cframe = Camera.CFrame
+                if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+                    LP.Character.Humanoid.PlatformStand = true
+                    bv.velocity = Camera.CFrame.LookVector * _G.FlySpeed
+                    bg.cframe = Camera.CFrame
+                end
             end
             bv:Destroy(); bg:Destroy()
-            LP.Character.Humanoid.PlatformStand = false
+            if LP.Character and LP.Character:FindFirstChild("Humanoid") then LP.Character.Humanoid.PlatformStand = false end
         end)
     end
 end)
 
-SecFly:NewSlider("Tốc Độ Bay", "Kéo chậm để tránh lỗi", 250, 10, function(s)
-    _G.FlySpeed = s
-end)
+SecFly:NewSlider("Tốc Độ Bay", "Speed", 250, 10, function(s) _G.FlySpeed = s end)
 
--- Logic ESP Highlight (Màu đỏ rực)
-SecFly:NewToggle("Bật ESP", "Nhìn xuyên tường", function(state)
-    _G.ESP_Enabled = state
-end)
+SecFly:NewToggle("Bật ESP", "Soi đỏ", function(state) _G.ESP_Enabled = state end)
 
--- Vòng lặp quét liên tục (Fix lỗi ESP không hiện)
+-- VÒNG LẶP RENDER (GIỮ NGUYÊN ĐỂ KHÔNG LỖI)
 game:GetService("RunService").RenderStepped:Connect(function()
-    -- Xử lý ESP
     for _, v in pairs(game.Players:GetPlayers()) do
         if v ~= LP and v.Character then
             local highlight = v.Character:FindFirstChild("ViloHighlight")
             if _G.ESP_Enabled then
                 if not highlight then
-                    local h = Instance.new("Highlight")
+                    local h = Instance.new("Highlight", v.Character)
                     h.Name = "ViloHighlight"
-                    h.Parent = v.Character
                     h.FillColor = Color3.fromRGB(255, 0, 0)
-                    h.OutlineColor = Color3.fromRGB(255, 255, 255)
                 end
-            else
-                if highlight then highlight:Destroy() end
-            end
+            elseif highlight then highlight:Destroy() end
         end
     end
-    
-    -- Xử lý Aimbot
+    -- Aimbot Logic
     if _G.Aimbot_Enabled then
         local target = nil
         local dist = 400
@@ -124,8 +117,6 @@ game:GetService("RunService").RenderStepped:Connect(function()
                 end
             end
         end
-        if target then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position)
-        end
+        if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) end
     end
 end)
