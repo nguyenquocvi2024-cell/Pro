@@ -1,35 +1,34 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "VĨ LỎ - PRO VIP",
-   LoadingTitle = "Đang Tải Script...",
-   LoadingSubtitle = "by Vĩ Lỏ",
-   ConfigurationSaving = {
-      Enabled = false
-   },
+   Name = "HẮC KỶ TỬ - PRO VIP",
+   LoadingTitle = "Đang Tải Hệ Thống Vĩ Lỏ...",
+   LoadingSubtitle = "by Nguyễn Vĩ",
+   ConfigurationSaving = { Enabled = false },
    KeySystem = false
 })
-
-_G.ESP_Enabled = false
-_G.Fly_Enabled = false
-_G.Aimbot_Enabled = false
-_G.FlySpeed = 50
-_G.FullBright_Enabled = false -- Biến cho nhìn trong tối
 
 local LP = game.Players.LocalPlayer
 local Camera = game.Workspace.CurrentCamera
 local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+
+_G.ESP_Enabled = false
+_G.Fly_Enabled = false
+_G.Aimbot_Enabled = false
+_G.Noclip_Enabled = false
+_G.FullBright_Enabled = false
+_G.FlySpeed = 50
 
 local Tab1 = Window:CreateTab("🎮 Main", 4483362458)
-local SecAim = Tab1:CreateSection("Tự Ngắm & Ánh Sáng")
+local SecMain = Tab1:CreateSection("Điều Khiển Nhân Vật")
 
-Tab1:CreateInput({
-   Name = "Nhập POV (50-120)",
-   PlaceholderText = "Mặc định: 70",
-   RemoveTextAfterFocusLost = false,
-   Callback = function(Text)
-      local num = tonumber(Text)
-      if num then Camera.FieldOfView = num end
+Tab1:CreateToggle({
+   Name = "Bật/Tắt Đi Xuyên Tường (Noclip)",
+   CurrentValue = false,
+   Flag = "NoclipToggle",
+   Callback = function(Value)
+      _G.Noclip_Enabled = Value
    end,
 })
 
@@ -45,34 +44,41 @@ Tab1:CreateToggle({
          Lighting.FogEnd = 100000
          Lighting.GlobalShadows = false
          Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-         Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
       else
          Lighting.Brightness = 1
          Lighting.ClockTime = 12
-         Lighting.FogEnd = 10000
          Lighting.GlobalShadows = true
          Lighting.Ambient = Color3.fromRGB(127, 127, 127)
-         Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
       end
+   end,
+})
+
+Tab1:CreateInput({
+   Name = "Chỉnh POV (FOV)",
+   PlaceholderText = "Nhập số (50-120)...",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+      local num = tonumber(Text)
+      if num then Camera.FieldOfView = num end
    end,
 })
 
 Tab1:CreateToggle({
    Name = "Bật Aimbot",
    CurrentValue = false,
-   Flag = "Aimbot",
+   Flag = "AimToggle",
    Callback = function(Value)
       _G.Aimbot_Enabled = Value
    end,
 })
 
-local Tab2 = Window:CreateTab("🦅 Chức Năng", 4483362458)
-local SecFly = Tab2:CreateSection("Bay & ESP")
+local Tab2 = Window:CreateTab("🦅 Fly & ESP", 4483362458)
+local SecPro = Tab2:CreateSection("Chức Năng Bay")
 
 Tab2:CreateToggle({
-   Name = "Bật Fly",
+   Name = "Bật Fly (Điều Khiển Tay)",
    CurrentValue = false,
-   Flag = "Fly",
+   Flag = "FlyToggle",
    Callback = function(Value)
       _G.Fly_Enabled = Value
       if Value then
@@ -85,9 +91,11 @@ Tab2:CreateToggle({
                task.wait()
                if LP.Character and LP.Character:FindFirstChild("Humanoid") then
                   LP.Character.Humanoid.PlatformStand = true
-                    bv.velocity = Camera.CFrame.LookVector * _G.FlySpeed
-                    bg.cframe = Camera.CFrame
-                end
+                  -- Fix: Chỉ bay khi ní sử dụng phím di chuyển (JoyStick)
+                  local moveDir = LP.Character.Humanoid.MoveDirection
+                  bv.velocity = moveDir * _G.FlySpeed
+                  bg.cframe = Camera.CFrame
+               end
             end
             bv:Destroy(); bg:Destroy()
             if LP.Character and LP.Character:FindFirstChild("Humanoid") then
@@ -99,8 +107,8 @@ Tab2:CreateToggle({
 })
 
 Tab2:CreateInput({
-   Name = "Nhập Tốc Độ Fly (10-300)",
-   PlaceholderText = "Nhập số...",
+   Name = "Nhập Tốc Độ Fly",
+   PlaceholderText = "Mặc định: 50",
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
@@ -109,15 +117,26 @@ Tab2:CreateInput({
 })
 
 Tab2:CreateToggle({
-   Name = "Bật ESP (Soi Đỏ)",
+   Name = "Bật ESP",
    CurrentValue = false,
-   Flag = "ESP",
+   Flag = "EspToggle",
    Callback = function(Value)
       _G.ESP_Enabled = Value
    end,
 })
 
-game:GetService("RunService").RenderStepped:Connect(function()
+-- Vòng lặp xử lý hệ thống
+RunService.Stepped:Connect(function()
+    -- Xử lý Noclip
+    if _G.Noclip_Enabled and LP.Character then
+        for _, v in pairs(LP.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    -- Xử lý ESP
     if _G.ESP_Enabled then
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= LP and v.Character then
@@ -128,14 +147,9 @@ game:GetService("RunService").RenderStepped:Connect(function()
                 end
             end
         end
-    else
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v.Character and v.Character:FindFirstChild("ViloHighlight") then
-                v.Character.ViloHighlight:Destroy()
-            end
-        end
     end
     
+    -- Xử lý Aimbot
     if _G.Aimbot_Enabled then
         local target = nil
         local dist = 400
