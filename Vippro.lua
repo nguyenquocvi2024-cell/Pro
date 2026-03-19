@@ -1,9 +1,9 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Hệ Thống Vĩ DZ - PRO VIP",
+   Name = "HẮC KỶ TỬ - PRO VIP",
    LoadingTitle = "Đang Tải Hệ Thống Vĩ Lỏ...",
-   LoadingSubtitle = "by Nguyễn Vĩ + TEAM",
+   LoadingSubtitle = "by Nguyễn Vĩ",
    ConfigurationSaving = { Enabled = false },
    KeySystem = false
 })
@@ -20,24 +20,35 @@ _G.Aimbot_Enabled = false
 _G.Noclip_Enabled = false
 _G.FullBright_Enabled = false
 _G.InfJump_Enabled = false
+_G.InfAmmo_Enabled = false
 _G.FlySpeed = 50
 _G.HitboxSize = 2
 
+-- TAB MAIN
 local Tab1 = Window:CreateTab("🎮 Main", 4483362458)
-local SecMain = Tab1:CreateSection("Tính Năng Bổ Trợ")
+local SecMain = Tab1:CreateSection("Tính Năng Bổ Trợ & Chiến Đấu")
 
 Tab1:CreateToggle({
-   Name = "Bật Infinity Jump (Nhảy Vô Hạn)",
+   Name = "Bật Aimbot (Khóa Mục Tiêu)",
    CurrentValue = false,
-   Flag = "InfJump",
+   Flag = "AimToggle",
    Callback = function(Value)
-      _G.InfJump_Enabled = Value
+      _G.Aimbot_Enabled = Value
+   end,
+})
+
+Tab1:CreateToggle({
+   Name = "Bật Vô Hạn Đạn (Tất Cả Map)",
+   CurrentValue = false,
+   Flag = "InfAmmo",
+   Callback = function(Value)
+      _G.InfAmmo_Enabled = Value
    end,
 })
 
 Tab1:CreateInput({
    Name = "Mở Rộng Hitbox (0-300)",
-   PlaceholderText = "Nhập kích thước (VD: 20)...",
+   PlaceholderText = "Nhập kích thước...",
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
@@ -46,9 +57,18 @@ Tab1:CreateInput({
 })
 
 Tab1:CreateToggle({
-   Name = "Bật Đi Xuyên Tường (Noclip)",
+   Name = "Bật Infinity Jump",
    CurrentValue = false,
-   Flag = "NoclipToggle",
+   Flag = "InfJump",
+   Callback = function(Value)
+      _G.InfJump_Enabled = Value
+   end,
+})
+
+Tab1:CreateToggle({
+   Name = "Bật Noclip (Xuyên Tường)",
+   CurrentValue = false,
+   Flag = "Noclip",
    Callback = function(Value)
       _G.Noclip_Enabled = Value
    end,
@@ -72,35 +92,36 @@ Tab1:CreateToggle({
    end,
 })
 
+-- TAB SPEED & JUMP
 local TabSpeed = Window:CreateTab("⚡ Speed & Jump", 4483362458)
-local SecSpeed = TabSpeed:CreateSection("Tùy Chỉnh Thân Thể")
-
 TabSpeed:CreateInput({
-   Name = "Tùy Chỉnh Chạy Nhanh",
-   PlaceholderText = "Mặc định: 16",
-   RemoveTextAfterFocusLost = false,
+   Name = "Chỉnh Tốc Độ Chạy",
+   PlaceholderText = "16",
    Callback = function(Text)
       local num = tonumber(Text)
-      if num and LP.Character and LP.Character:FindFirstChild("Humanoid") then
-         LP.Character.Humanoid.WalkSpeed = num
-      end
+      if num and LP.Character then LP.Character.Humanoid.WalkSpeed = num end
    end,
 })
 
 TabSpeed:CreateInput({
-   Name = "Tùy Chỉnh Nhảy Cao",
-   PlaceholderText = "Mặc định: 50",
-   RemoveTextAfterFocusLost = false,
+   Name = "Chỉnh Độ Cao Nhảy",
+   PlaceholderText = "50",
    Callback = function(Text)
       local num = tonumber(Text)
-      if num and LP.Character and LP.Character:FindFirstChild("Humanoid") then
-         LP.Character.Humanoid.JumpPower = num
-      end
+      if num and LP.Character then LP.Character.Humanoid.JumpPower = num end
    end,
 })
 
+-- TAB FLY & ESP
 local Tab2 = Window:CreateTab("🦅 Fly & ESP", 4483362458)
-local SecPro = Tab2:CreateSection("Chức Năng Bay")
+Tab2:CreateToggle({
+   Name = "Bật ESP (Đã Fix Lỗi)",
+   CurrentValue = false,
+   Flag = "EspToggle",
+   Callback = function(Value)
+      _G.ESP_Enabled = Value
+   end,
+})
 
 Tab2:CreateToggle({
    Name = "Bật Fly (Điều Khiển Tay)",
@@ -116,17 +137,14 @@ Tab2:CreateToggle({
          spawn(function()
             while _G.Fly_Enabled do
                task.wait()
-               if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+               if LP.Character then
                   LP.Character.Humanoid.PlatformStand = true
-                  local moveDir = LP.Character.Humanoid.MoveDirection
-                  bv.velocity = moveDir * _G.FlySpeed
+                  bv.velocity = LP.Character.Humanoid.MoveDirection * _G.FlySpeed
                   bg.cframe = Camera.CFrame
                end
             end
             bv:Destroy(); bg:Destroy()
-            if LP.Character and LP.Character:FindFirstChild("Humanoid") then
-               LP.Character.Humanoid.PlatformStand = false
-            end
+            if LP.Character then LP.Character.Humanoid.PlatformStand = false end
          end)
       end
    end,
@@ -134,48 +152,75 @@ Tab2:CreateToggle({
 
 Tab2:CreateInput({
    Name = "Nhập Tốc Độ Fly",
-   PlaceholderText = "Mặc định: 50",
-   RemoveTextAfterFocusLost = false,
+   PlaceholderText = "50",
    Callback = function(Text)
       local num = tonumber(Text)
       if num then _G.FlySpeed = num end
    end,
 })
 
-Tab2:CreateToggle({
-   Name = "Bật ESP",
-   CurrentValue = false,
-   Flag = "EspToggle",
-   Callback = function(Value)
-      _G.ESP_Enabled = Value
-   end,
-})
-
--- Xử lý Nhảy Vô Hạn
+-- HỆ THỐNG XỬ LÝ (KHÔNG ĐƯỢC XÓA)
 UserInputService.JumpRequest:Connect(function()
-    if _G.InfJump_Enabled and LP.Character and LP.Character:FindFirstChild("Humanoid") then
+    if _G.InfJump_Enabled and LP.Character then
         LP.Character.Humanoid:ChangeState("Jumping")
     end
 end)
 
--- Vòng lặp xử lý liên tục
 RunService.Stepped:Connect(function()
     if _G.Noclip_Enabled and LP.Character then
         for _, v in pairs(LP.Character:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
         end
     end
+    -- Fix ESP: Quét liên tục để hiện highlight
+    if _G.ESP_Enabled then
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= LP and v.Character then
+                if not v.Character:FindFirstChild("Highlight") then
+                    local h = Instance.new("Highlight", v.Character)
+                    h.FillColor = Color3.fromRGB(255, 0, 0)
+                end
+            end
+        end
+    else
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v.Character and v.Character:FindFirstChild("Highlight") then
+                v.Character.Highlight:Destroy()
+            end
+        end
+    end
+    -- Vô hạn đạn (Cơ chế quét Tool)
+    if _G.InfAmmo_Enabled then
+        for _, v in pairs(LP.Character:GetChildren()) do
+            if v:IsA("Tool") and (v:FindFirstChild("Ammo") or v:FindFirstChild("Clip")) then
+                local ammo = v:FindFirstChild("Ammo") or v:FindFirstChild("Clip")
+                if ammo:IsA("IntValue") or ammo:IsA("NumberValue") then ammo.Value = 999 end
+            end
+        end
+    end
 end)
 
 RunService.RenderStepped:Connect(function()
-    -- Xử lý Hitbox Expander
+    -- Hitbox
     for _, v in pairs(game.Players:GetPlayers()) do
         if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
             v.Character.HumanoidRootPart.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
-            v.Character.HumanoidRootPart.Transparency = 0.7
-            v.Character.HumanoidRootPart.CanCollide = false
+            v.Character.HumanoidRootPart.Transparency = 0.8
         end
     end
-
-    -- ESP & Aimbot giữ nguyên như cũ...
+    -- Aimbot
+    if _G.Aimbot_Enabled then
+        local target = nil
+        local dist = 400
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= LP and v.Character and v.Character:FindFirstChild("Head") then
+                local pos, onScreen = Camera:WorldToScreenPoint(v.Character.Head.Position)
+                if onScreen then
+                    local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                    if d < dist then target = v; dist = d end
+                end
+            end
+        end
+        if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) end
+    end
 end)
