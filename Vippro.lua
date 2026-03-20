@@ -1,7 +1,3 @@
--- === FIX MENU HIỆN (chỉ thêm 3 dòng này) ===
-if not game:IsLoaded() then game.Loaded:Wait() end
-task.wait(1)
-
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -44,7 +40,7 @@ local AimGui = Instance.new("ScreenGui")
 local AimBtn = Instance.new("TextButton")
 local AimCorner = Instance.new("UICorner")
 
-AimGui.Parent = LP:WaitForChild("PlayerGui")   -- ← FIX CHẶN CoreGui
+AimGui.Parent = game.CoreGui
 AimBtn.Parent = AimGui
 AimBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 AimBtn.Size = UDim2.new(0, 65, 0, 65)
@@ -185,7 +181,7 @@ RunService.RenderStepped:Connect(function()
         local target = nil
         local dist = _G.FOVSize
         for _, v in pairs(game.Players:GetPlayers()) do
-            if v \~= LP and v.Character and v.Character:FindFirstChild("Head") then
+            if v ~= LP and v.Character and v.Character:FindFirstChild("Head") then
                 local pos, onScreen = Camera:WorldToScreenPoint(v.Character.Head.Position)
                 if onScreen then
                     local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
@@ -198,7 +194,7 @@ RunService.RenderStepped:Connect(function()
 
     -- Hitbox & ESP (Highlight)
     for _, v in pairs(game.Players:GetPlayers()) do
-        if v \~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+        if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
             v.Character.HumanoidRootPart.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
             if _G.ESP_Enabled and not v.Character:FindFirstChild("Highlight") then
                 local h = Instance.new("Highlight", v.Character)
@@ -229,5 +225,3 @@ end)
 UserInputService.JumpRequest:Connect(function()
     if _G.InfJump_Enabled and LP.Character then LP.Character.Humanoid:ChangeState("Jumping") end
 end)
-
-print("✅ HẮC KỶ TỬ PRO VIP - MENU ĐÃ HIỆN THÀNH CÔNG!")
