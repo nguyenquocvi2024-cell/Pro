@@ -30,7 +30,7 @@ _G.FOVSize = 150
 -- --- VẼ VÒNG POV (DÂN CHUYÊN NGHIỆP) ---
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 2
-FOVCircle.Color = Color3.fromRGB(0, 255, 0)
+FOVCircle.Color = Color3.fromRGB(0, 255, 0)  -- XANH LÁ
 FOVCircle.Filled = false
 FOVCircle.Transparency = 1
 FOVCircle.Visible = false
@@ -170,18 +170,19 @@ Tab2:CreateInput({
    Callback = function(t) if tonumber(t) then _G.FlySpeed = tonumber(t) end end,
 })
 
--- --- HỆ THỐNG VÒNG LẶP XỬ LÝ (KHÔNG CẮT) ---
+-- --- HỆ THỐNG VÒNG LẶP XỬ LÝ (CHỈ SỬA 2 CHỖ) ---
 RunService.RenderStepped:Connect(function()
-    -- Vòng POV theo tâm màn hình
+    -- Vòng POV theo tâm màn hình + BẮT BUỘC HIỆN MÀU XANH
     FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     FOVCircle.Radius = _G.FOVSize
+    FOVCircle.Visible = _G.FOVCircle_Enabled   -- ← FIX HIỆN VÒNG POV
     
     -- Aimbot tích hợp vùng POV
     if _G.Aimbot_Enabled then
         local target = nil
         local dist = _G.FOVSize
         for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= LP and v.Character and v.Character:FindFirstChild("Head") then
+            if v \~= LP and v.Character and v.Character:FindFirstChild("Head") then
                 local pos, onScreen = Camera:WorldToScreenPoint(v.Character.Head.Position)
                 if onScreen then
                     local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
@@ -192,25 +193,31 @@ RunService.RenderStepped:Connect(function()
         if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) end
     end
 
-    -- Hitbox & ESP (Highlight)
+    -- Hitbox & ESP (Highlight) - ĐÃ FIX TỰ XÓA KHI TẮT
     for _, v in pairs(game.Players:GetPlayers()) do
-        if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+        if v \~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
             v.Character.HumanoidRootPart.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
             if _G.ESP_Enabled and not v.Character:FindFirstChild("Highlight") then
                 local h = Instance.new("Highlight", v.Character)
                 h.FillColor = Color3.fromRGB(255, 0, 0)
+            elseif not _G.ESP_Enabled then
+                local h = v.Character:FindFirstChild("Highlight")
+                if h then h:Destroy() end
             end
         end
     end
 end)
 
 RunService.Stepped:Connect(function()
-    if _G.Noclip_Enabled and LP.Character then
+    -- Noclip - ĐÃ FIX TẮT ĐÚNG (không còn xuyên tường mãi)
+    if LP.Character then
         for _, v in pairs(LP.Character:GetDescendants()) do
-            if v:IsA("BasePart") then v.CanCollide = false end
+            if v:IsA("BasePart") then 
+                v.CanCollide = not _G.Noclip_Enabled 
+            end
         end
     end
-    -- Vô hạn đạn quét Tool
+    -- Vô hạn đạn quét Tool (giữ nguyên gốc)
     if _G.InfAmmo_Enabled and LP.Character then
         for _, tool in pairs(LP.Character:GetChildren()) do
             if tool:IsA("Tool") then
