@@ -8,75 +8,81 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
-local LP = game.Players.LocalPlayer
-local Camera = game.Workspace.CurrentCamera
-local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
 
--- --- TẤT CẢ BIẾN CẤM XÓA ---
+-- --- BIẾN ĐIỀU KHIỂN (DÙNG CODE MỚI CỦA NÍ) ---
 _G.Aimbot_Enabled = false
-_G.FOVCircle_Enabled = false
 _G.FOVSize = 150
+_G.AimPart = "Head"
+_G.TeamCheck = true
+_G.Prediction = 0.1
 _G.InfAmmo_Enabled = false
 _G.ESP_Enabled = false
 _G.Noclip_Enabled = false
 _G.InfJump_Enabled = false
-_G.FullBright_Enabled = false
 _G.Fly_Enabled = false
 _G.FlySpeed = 50
 _G.HitboxSize = 2
 
--- --- KHỞI TẠO VÒNG POV XANH (GIỐNG ẢNH 100%) ---
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Thickness = 2
-FOVCircle.Color = Color3.fromRGB(0, 255, 0)
-FOVCircle.Filled = false
-FOVCircle.Transparency = 1
-FOVCircle.Visible = false
-FOVCircle.ZIndex = 999
+-- --- FOV CIRCLE (ĐẸP NHƯ CLIP) ---
+local fovCircle = Drawing.new("Circle")
+fovCircle.Thickness = 2
+fovCircle.Color = Color3.fromRGB(255, 0, 0)
+fovCircle.Filled = false
+fovCircle.Transparency = 0.8
+fovCircle.NumSides = 100
+fovCircle.Radius = _G.FOVSize
+fovCircle.Visible = false
 
--- --- NÚT AIM NỔI (FLOAT BUTTON) ---
-local AimGui = Instance.new("ScreenGui", game.CoreGui)
-local AimBtn = Instance.new("TextButton", AimGui)
-AimBtn.Size = UDim2.new(0, 65, 0, 65)
-AimBtn.Position = UDim2.new(0, 10, 0, 300)
-AimBtn.Text = "AIM: OFF"
-AimBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-AimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-AimBtn.Draggable = true
-AimBtn.Active = true
-Instance.new("UICorner", AimBtn)
+-- --- HÀM TÌM ENEMY GẦN NHẤT (CODE CỦA NÍ) ---
+local function getClosestPlayer()
+    local closest = nil
+    local shortest = math.huge
+    local mousePos = UserInputService:GetMouseLocation()
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer 
+            and player.Character 
+            and player.Character:FindFirstChild(_G.AimPart) then
+            
+            if _G.TeamCheck and player.Team == LocalPlayer.Team then continue end
+            
+            local pos, onScreen = Camera:WorldToViewportPoint(player.Character[_G.AimPart].Position)
+            if onScreen then
+                local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
+                if dist < shortest and dist < _G.FOVSize then
+                    shortest = dist
+                    closest = player
+                end
+            end
+        end
+    end
+    return closest
+end
 
-AimBtn.MouseButton1Click:Connect(function()
-    _G.Aimbot_Enabled = not _G.Aimbot_Enabled
-    AimBtn.Text = _G.Aimbot_Enabled and "AIM: ON" or "AIM: OFF"
-    AimBtn.BackgroundColor3 = _G.Aimbot_Enabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-end)
-
--- --- MỤC CHÍNH (MAIN) ---
+-- --- TAB MAIN ---
 local Tab1 = Window:CreateTab("🎮 Main", 4483362458)
 
 Tab1:CreateToggle({
-   Name = "HIỆN VÒNG POV (VÙNG NGẮM)",
+   Name = "BẬT AIMBOT (PREDICTION)",
    CurrentValue = false,
-   Callback = function(v) _G.FOVCircle_Enabled = v end,
-})
-
-Tab1:CreateInput({
-   Name = "CHỈNH KÍCH THƯỚC VÒNG POV",
-   PlaceholderText = "150",
-   Callback = function(t) if tonumber(t) then _G.FOVSize = tonumber(t) end end,
+   Callback = function(v) _G.Aimbot_Enabled = v; fovCircle.Visible = v end,
 })
 
 Tab1:CreateToggle({
-   Name = "BẬT AIMBOT (KHÓA TÂM CHUẨN)",
-   CurrentValue = false,
-   Callback = function(v) 
-      _G.Aimbot_Enabled = v 
-      AimBtn.Text = v and "AIM: ON" or "AIM: OFF"
-      AimBtn.BackgroundColor3 = v and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-   end,
+   Name = "TEAM CHECK (KHÔNG BẮN ĐỒNG ĐỘI)",
+   CurrentValue = true,
+   Callback = function(v) _G.TeamCheck = v end,
+})
+
+Tab1:CreateInput({
+   Name = "KÍCH THƯỚC VÒNG FOV",
+   PlaceholderText = "150",
+   Callback = function(t) if tonumber(t) then _G.FOVSize = tonumber(t); fovCircle.Radius = tonumber(t) end end,
 })
 
 Tab1:CreateToggle({
@@ -96,112 +102,77 @@ Tab1:CreateToggle({
    end,
 })
 
-Tab1:CreateInput({
-   Name = "HITBOX EXPANDER (0-300)",
-   PlaceholderText = "Nhập số...",
-   Callback = function(t) if tonumber(t) then _G.HitboxSize = tonumber(t) end end,
-})
-
 Tab1:CreateToggle({
-   Name = "INFINITY JUMP (NHẢY VÔ HẠN)",
-   CurrentValue = false,
-   Callback = function(v) _G.InfJump_Enabled = v end,
-})
-
-Tab1:CreateToggle({
-   Name = "NOCLIP (XUYÊN TƯỜNG - FIXED)",
+   Name = "NOCLIP (XUYÊN TƯỜNG)",
    CurrentValue = false,
    Callback = function(v) _G.Noclip_Enabled = v end,
 })
 
--- --- MỤC TỐC ĐỘ & NHẢY (SPEED OF JUMP) ---
+-- --- TAB SPEED & JUMP ---
 local TabSpeed = Window:CreateTab("⚡ Speed & Jump", 4483362458)
 TabSpeed:CreateInput({
-   Name = "CHẠY NHANH (WALKSPEED)",
+   Name = "WALKSPEED",
    PlaceholderText = "16",
-   Callback = function(t) if tonumber(t) and LP.Character then LP.Character.Humanoid.WalkSpeed = tonumber(t) end end,
-})
-TabSpeed:CreateInput({
-   Name = "NHẢY CAO (JUMPPOWER)",
-   PlaceholderText = "50",
-   Callback = function(t) if tonumber(t) and LP.Character then LP.Character.Humanoid.JumpPower = tonumber(t) end end,
+   Callback = function(t) if tonumber(t) and LocalPlayer.Character then LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(t) end end,
 })
 
--- --- MỤC BAY & ESP ---
+-- --- TAB FLY & ESP ---
 local Tab2 = Window:CreateTab("🦅 Fly & ESP", 4483362458)
 Tab2:CreateToggle({
-   Name = "BẬT ESP (CHỐNG RÁC)",
+   Name = "BẬT ESP",
    CurrentValue = false,
    Callback = function(v) _G.ESP_Enabled = v end,
 })
-
 Tab2:CreateToggle({
    Name = "BẬT FLY (ĐIỀU KHIỂN TAY)",
    CurrentValue = false,
    Callback = function(Value)
       _G.Fly_Enabled = Value
       if Value then
-         local bg = Instance.new("BodyGyro", LP.Character.HumanoidRootPart)
-         local bv = Instance.new("BodyVelocity", LP.Character.HumanoidRootPart)
-         bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-         bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+         local bg = Instance.new("BodyGyro", LocalPlayer.Character.HumanoidRootPart)
+         local bv = Instance.new("BodyVelocity", LocalPlayer.Character.HumanoidRootPart)
+         bg.maxTorque = Vector3.new(9e9, 9e9, 9e9); bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
          spawn(function()
             while _G.Fly_Enabled do
                task.wait()
-               if LP.Character then
-                  LP.Character.Humanoid.PlatformStand = true
-                  bv.velocity = LP.Character.Humanoid.MoveDirection * _G.FlySpeed
+               if LocalPlayer.Character then
+                  LocalPlayer.Character.Humanoid.PlatformStand = true
+                  bv.velocity = LocalPlayer.Character.Humanoid.MoveDirection * _G.FlySpeed
                   bg.cframe = Camera.CFrame
                end
             end
             bv:Destroy(); bg:Destroy()
-            if LP.Character then LP.Character.Humanoid.PlatformStand = false end
+            if LocalPlayer.Character then LocalPlayer.Character.Humanoid.PlatformStand = false end
          end)
       end
    end,
 })
 
-Tab2:CreateInput({
-   Name = "TỐC ĐỘ BAY (FLY SPEED)",
-   PlaceholderText = "50",
-   Callback = function(t) if tonumber(t) then _G.FlySpeed = tonumber(t) end end,
-})
-
--- --- HỆ THỐNG XỬ LÝ RENDER (QUAN TRỌNG NHẤT) ---
+-- --- VÒNG LẶP XỬ LÝ (RENDER) ---
 RunService.RenderStepped:Connect(function()
-    -- Vòng POV hiện xanh chuẩn 100%
-    FOVCircle.Visible = _G.FOVCircle_Enabled
-    FOVCircle.Radius = _G.FOVSize
-    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-
-    -- Aimbot Chống Chúi Đất & Khóa Tâm Mượt
+    -- Cập nhật vòng FOV theo chuột
+    fovCircle.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+    
+    -- Xử lý Aimbot Prediction
     if _G.Aimbot_Enabled then
-        local target = nil
-        local dist = _G.FOVSize
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= LP and v.Character and v.Character:FindFirstChild("Head") then
-                local pos, onScreen = Camera:WorldToScreenPoint(v.Character.Head.Position)
-                if onScreen then
-                    local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                    if d < dist then target = v; dist = d end
-                end
-            end
-        end
-        if target then 
-            local lookAtPos = target.Character.Head.Position
-            Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, lookAtPos), 0.2)
+        local target = getClosestPlayer()
+        if target and target.Character and target.Character:FindFirstChild(_G.AimPart) then
+            local targetPos = target.Character[_G.AimPart].Position
+            local velocity = target.Character:FindFirstChild("HumanoidRootPart") and target.Character.HumanoidRootPart.Velocity or Vector3.new(0,0,0)
+            
+            -- Prediction như code ní gửi
+            local predictedPos = targetPos + velocity * _G.Prediction
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, predictedPos)
         end
     end
 
-    -- Hitbox & ESP Fix Rác Highlight
-    for _, v in pairs(game.Players:GetPlayers()) do
-        if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+    -- Hitbox & ESP Fix
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
             v.Character.HumanoidRootPart.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
-            v.Character.HumanoidRootPart.Transparency = 0.8
             if _G.ESP_Enabled then
                 if not v.Character:FindFirstChild("Highlight") then
-                    local h = Instance.new("Highlight", v.Character)
-                    h.FillColor = Color3.fromRGB(255, 0, 0)
+                    Instance.new("Highlight", v.Character).FillColor = Color3.fromRGB(255, 0, 0)
                 end
             else
                 local h = v.Character:FindFirstChild("Highlight")
@@ -211,25 +182,19 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- Noclip & Ammo
 RunService.Stepped:Connect(function()
-    -- Noclip Fix Tắt/Bật chuẩn
-    if LP.Character then
-        for _, v in pairs(LP.Character:GetDescendants()) do
+    if LocalPlayer.Character then
+        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = not _G.Noclip_Enabled end
-        end
-    end
-    -- Vô hạn đạn quét Tool
-    if _G.InfAmmo_Enabled and LP.Character then
-        for _, tool in pairs(LP.Character:GetChildren()) do
-            if tool:IsA("Tool") then
-                for _, v in pairs(tool:GetDescendants()) do
-                    if v:IsA("IntValue") and (v.Name == "Ammo" or v.Name == "Clip") then v.Value = 999 end
-                end
-            end
         end
     end
 end)
 
-UserInputService.JumpRequest:Connect(function()
-    if _G.InfJump_Enabled and LP.Character then LP.Character.Humanoid:ChangeState("Jumping") end
+-- Toggle Phím Right Ctrl
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.RightControl then
+        _G.Aimbot_Enabled = not _G.Aimbot_Enabled
+        fovCircle.Visible = _G.Aimbot_Enabled
+    end
 end)
