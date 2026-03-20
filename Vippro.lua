@@ -14,49 +14,44 @@ local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- --- BIẾN ĐIỀU KHIỂN (DÙNG CODE MỚI CỦA NÍ) ---
+-- --- BIẾN ĐIỀU KHIỂN (THEO CODE MỚI CỦA NÍ) ---
 _G.Aimbot_Enabled = false
-_G.FOVSize = 150
+_G.FOVSize = 200          -- To như vòng trong ảnh
 _G.AimPart = "Head"
 _G.TeamCheck = true
-_G.Prediction = 0.1
+_G.Prediction = 0.12      -- Prediction vừa đủ
+_G.SmoothSpeed = 0.35     -- Mượt như pro
 _G.InfAmmo_Enabled = false
 _G.ESP_Enabled = false
 _G.Noclip_Enabled = false
-_G.InfJump_Enabled = false
 _G.Fly_Enabled = false
 _G.FlySpeed = 50
-_G.HitboxSize = 2
 
--- --- FOV CIRCLE (ĐẸP NHƯ CLIP) ---
+-- --- FOV CIRCLE XANH DƯƠNG (GIỐNG HỆT ẢNH) ---
 local fovCircle = Drawing.new("Circle")
-fovCircle.Thickness = 2
-fovCircle.Color = Color3.fromRGB(255, 0, 0)
+fovCircle.Thickness = 3
+fovCircle.Color = Color3.fromRGB(0, 170, 255)  -- Xanh dương chuẩn
 fovCircle.Filled = false
-fovCircle.Transparency = 0.8
-fovCircle.NumSides = 100
+fovCircle.Transparency = 0.6
+fovCircle.NumSides = 120
 fovCircle.Radius = _G.FOVSize
 fovCircle.Visible = false
 
--- --- HÀM TÌM ENEMY GẦN NHẤT (CODE CỦA NÍ) ---
+-- --- HÀM TÌM TARGET (CODE MỚI) ---
 local function getClosestPlayer()
-    local closest = nil
-    local shortest = math.huge
+    local closest, shortest = nil, math.huge
     local mousePos = UserInputService:GetMouseLocation()
     
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer 
-            and player.Character 
-            and player.Character:FindFirstChild(_G.AimPart) then
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild(_G.AimPart) then
+            if _G.TeamCheck and plr.Team == LocalPlayer.Team then continue end
             
-            if _G.TeamCheck and player.Team == LocalPlayer.Team then continue end
-            
-            local pos, onScreen = Camera:WorldToViewportPoint(player.Character[_G.AimPart].Position)
+            local pos, onScreen = Camera:WorldToViewportPoint(plr.Character[_G.AimPart].Position)
             if onScreen then
                 local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
                 if dist < shortest and dist < _G.FOVSize then
                     shortest = dist
-                    closest = player
+                    closest = plr
                 end
             end
         end
@@ -68,20 +63,20 @@ end
 local Tab1 = Window:CreateTab("🎮 Main", 4483362458)
 
 Tab1:CreateToggle({
-   Name = "BẬT AIMBOT (PREDICTION)",
+   Name = "BẬT AIMBOT (GIỮ CHUỘT PHẢI)",
    CurrentValue = false,
    Callback = function(v) _G.Aimbot_Enabled = v; fovCircle.Visible = v end,
 })
 
 Tab1:CreateToggle({
-   Name = "TEAM CHECK (KHÔNG BẮN ĐỒNG ĐỘI)",
+   Name = "TEAM CHECK",
    CurrentValue = true,
    Callback = function(v) _G.TeamCheck = v end,
 })
 
 Tab1:CreateInput({
-   Name = "KÍCH THƯỚC VÒNG FOV",
-   PlaceholderText = "150",
+   Name = "CHỈNH VÒNG FOV",
+   PlaceholderText = "200",
    Callback = function(t) if tonumber(t) then _G.FOVSize = tonumber(t); fovCircle.Radius = tonumber(t) end end,
 })
 
@@ -108,14 +103,6 @@ Tab1:CreateToggle({
    Callback = function(v) _G.Noclip_Enabled = v end,
 })
 
--- --- TAB SPEED & JUMP ---
-local TabSpeed = Window:CreateTab("⚡ Speed & Jump", 4483362458)
-TabSpeed:CreateInput({
-   Name = "WALKSPEED",
-   PlaceholderText = "16",
-   Callback = function(t) if tonumber(t) and LocalPlayer.Character then LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(t) end end,
-})
-
 -- --- TAB FLY & ESP ---
 local Tab2 = Window:CreateTab("🦅 Fly & ESP", 4483362458)
 Tab2:CreateToggle({
@@ -124,7 +111,7 @@ Tab2:CreateToggle({
    Callback = function(v) _G.ESP_Enabled = v end,
 })
 Tab2:CreateToggle({
-   Name = "BẬT FLY (ĐIỀU KHIỂN TAY)",
+   Name = "BẬT FLY",
    CurrentValue = false,
    Callback = function(Value)
       _G.Fly_Enabled = Value
@@ -150,26 +137,26 @@ Tab2:CreateToggle({
 
 -- --- VÒNG LẶP XỬ LÝ (RENDER) ---
 RunService.RenderStepped:Connect(function()
-    -- Cập nhật vòng FOV theo chuột
-    fovCircle.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+    fovCircle.Position = UserInputService:GetMouseLocation()
     
-    -- Xử lý Aimbot Prediction
-    if _G.Aimbot_Enabled then
+    -- AIMBOT SMOOTH + CHỈ KHI GIỮ CHUỘT PHẢI
+    if _G.Aimbot_Enabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         local target = getClosestPlayer()
         if target and target.Character and target.Character:FindFirstChild(_G.AimPart) then
             local targetPos = target.Character[_G.AimPart].Position
-            local velocity = target.Character:FindFirstChild("HumanoidRootPart") and target.Character.HumanoidRootPart.Velocity or Vector3.new(0,0,0)
+            local vel = (target.Character:FindFirstChild("HumanoidRootPart") and target.Character.HumanoidRootPart.Velocity) or Vector3.zero
             
-            -- Prediction như code ní gửi
-            local predictedPos = targetPos + velocity * _G.Prediction
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, predictedPos)
+            local predictedPos = targetPos + vel * _G.Prediction
+            local targetCFrame = CFrame.new(Camera.CFrame.Position, predictedPos)
+            
+            -- SMOOTH LERP (KHÔNG GIẬT TÂM)
+            Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, _G.SmoothSpeed)
         end
     end
 
-    -- Hitbox & ESP Fix
+    -- ESP Fix
     for _, v in pairs(Players:GetPlayers()) do
         if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-            v.Character.HumanoidRootPart.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
             if _G.ESP_Enabled then
                 if not v.Character:FindFirstChild("Highlight") then
                     Instance.new("Highlight", v.Character).FillColor = Color3.fromRGB(255, 0, 0)
@@ -182,7 +169,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Noclip & Ammo
+-- Noclip & Stepped
 RunService.Stepped:Connect(function()
     if LocalPlayer.Character then
         for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
