@@ -1,7 +1,7 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "HẮC KỶ TỬ - PRO VIP",
+   Name = "Vĩ lỏ  - PRO VIP",
    LoadingTitle = "Hệ Thống Vĩ Lỏ Đang Chạy...",
    LoadingSubtitle = "by Nguyễn Vĩ",
    ConfigurationSaving = { Enabled = false },
