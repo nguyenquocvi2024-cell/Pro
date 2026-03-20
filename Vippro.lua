@@ -27,15 +27,15 @@ _G.FlySpeed = 50
 _G.HitboxSize = 2
 _G.FOVSize = 150
 
--- --- VẼ VÒNG POV (DÂN CHUYÊN NGHIỆP) ---
+-- --- VẼ VÒNG POV ---
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 2
-FOVCircle.Color = Color3.fromRGB(0, 255, 0)  -- XANH LÁ
+FOVCircle.Color = Color3.fromRGB(0, 255, 0)
 FOVCircle.Filled = false
 FOVCircle.Transparency = 1
 FOVCircle.Visible = false
 
--- --- NÚT BẬT/TẮT AIM NHANH (FLOAT BUTTON) ---
+-- --- NÚT BẬT/TẮT AIM NHANH ---
 local AimGui = Instance.new("ScreenGui")
 local AimBtn = Instance.new("TextButton")
 local AimCorner = Instance.new("UICorner")
@@ -57,23 +57,23 @@ AimBtn.MouseButton1Click:Connect(function()
     AimBtn.BackgroundColor3 = _G.Aimbot_Enabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
 end)
 
--- --- TAB MAIN (FULL TÍNH NĂNG) ---
+-- --- TAB MAIN ---
 local Tab1 = Window:CreateTab("🎮 Main", 4483362458)
 
 Tab1:CreateToggle({
    Name = "Bật Vòng POV (Vùng Aim)",
    CurrentValue = false,
-   Callback = function(v) _G.FOVCircle_Enabled = v; FOVCircle.Visible = v end,
+   Callback = function(v) _G.FOVCircle_Enabled = v end,
 })
 
 Tab1:CreateInput({
    Name = "Kích Thước Vòng Aim",
-   PlaceholderText = "Mặc định 150...",
+   PlaceholderText = "150...",
    Callback = function(t) if tonumber(t) then _G.FOVSize = tonumber(t) end end,
 })
 
 Tab1:CreateToggle({
-   Name = "Bật Aimbot (Trong Vòng POV)",
+   Name = "Bật Aimbot",
    CurrentValue = false,
    Callback = function(v) 
       _G.Aimbot_Enabled = v 
@@ -83,7 +83,7 @@ Tab1:CreateToggle({
 })
 
 Tab1:CreateToggle({
-   Name = "Vô Hạn Đạn (Arsenal Hook)",
+   Name = "Vô Hạn Đạn (Fix Arsenal)",
    CurrentValue = false,
    Callback = function(v)
       _G.InfAmmo_Enabled = v
@@ -120,12 +120,12 @@ Tab1:CreateToggle({
 -- --- TAB SPEED & JUMP ---
 local TabSpeed = Window:CreateTab("⚡ Speed & Jump", 4483362458)
 TabSpeed:CreateInput({
-   Name = "Chạy Nhanh (WalkSpeed)",
+   Name = "WalkSpeed",
    PlaceholderText = "16",
    Callback = function(t) if tonumber(t) and LP.Character then LP.Character.Humanoid.WalkSpeed = tonumber(t) end end,
 })
 TabSpeed:CreateInput({
-   Name = "Nhảy Cao (JumpPower)",
+   Name = "JumpPower",
    PlaceholderText = "50",
    Callback = function(t) if tonumber(t) and LP.Character then LP.Character.Humanoid.JumpPower = tonumber(t) end end,
 })
@@ -164,25 +164,19 @@ Tab2:CreateToggle({
    end,
 })
 
-Tab2:CreateInput({
-   Name = "Nhập Tốc Độ Fly",
-   PlaceholderText = "50",
-   Callback = function(t) if tonumber(t) then _G.FlySpeed = tonumber(t) end end,
-})
-
--- --- HỆ THỐNG VÒNG LẶP XỬ LÝ (CHỈ SỬA 2 CHỖ) ---
+-- --- HỆ THỐNG VÒNG LẶP XỬ LÝ (ĐÃ FIX THEO YÊU CẦU) ---
 RunService.RenderStepped:Connect(function()
-    -- Vòng POV theo tâm màn hình + BẮT BUỘC HIỆN MÀU XANH
+    -- [FIX 1]: Vòng POV hiện xanh chắc chắn
     FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     FOVCircle.Radius = _G.FOVSize
-    FOVCircle.Visible = _G.FOVCircle_Enabled   -- ← FIX HIỆN VÒNG POV
+    FOVCircle.Visible = _G.FOVCircle_Enabled 
     
     -- Aimbot tích hợp vùng POV
     if _G.Aimbot_Enabled then
         local target = nil
         local dist = _G.FOVSize
         for _, v in pairs(game.Players:GetPlayers()) do
-            if v \~= LP and v.Character and v.Character:FindFirstChild("Head") then
+            if v ~= LP and v.Character and v.Character:FindFirstChild("Head") then
                 local pos, onScreen = Camera:WorldToScreenPoint(v.Character.Head.Position)
                 if onScreen then
                     local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
@@ -193,10 +187,12 @@ RunService.RenderStepped:Connect(function()
         if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) end
     end
 
-    -- Hitbox & ESP (Highlight) - ĐÃ FIX TỰ XÓA KHI TẮT
+    -- Hitbox & [FIX 2]: ESP không để rác
     for _, v in pairs(game.Players:GetPlayers()) do
-        if v \~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+        if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
             v.Character.HumanoidRootPart.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
+            v.Character.HumanoidRootPart.Transparency = 0.8
+            
             if _G.ESP_Enabled and not v.Character:FindFirstChild("Highlight") then
                 local h = Instance.new("Highlight", v.Character)
                 h.FillColor = Color3.fromRGB(255, 0, 0)
@@ -209,7 +205,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 RunService.Stepped:Connect(function()
-    -- Noclip - ĐÃ FIX TẮT ĐÚNG (không còn xuyên tường mãi)
+    -- [FIX 3]: Noclip tắt đúng (vừa bật vừa tắt mượt)
     if LP.Character then
         for _, v in pairs(LP.Character:GetDescendants()) do
             if v:IsA("BasePart") then 
@@ -217,7 +213,8 @@ RunService.Stepped:Connect(function()
             end
         end
     end
-    -- Vô hạn đạn quét Tool (giữ nguyên gốc)
+    
+    -- Vô hạn đạn quét Tool
     if _G.InfAmmo_Enabled and LP.Character then
         for _, tool in pairs(LP.Character:GetChildren()) do
             if tool:IsA("Tool") then
