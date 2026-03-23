@@ -1,37 +1,23 @@
---[[
-    ╔════════════════════════════════════════════════════════════╗
-    ║        HỆ THỐNG VĨ LỎ - PHIÊN BẢN CÔNG KHAI (PUBLIC)       ║
-    ║   Author: Nguyễn Vĩ DZ                                     ║
-    ║   Tính năng: Full Menu, Speed, Fly, ESP, TP, Fling, Chat   ║
-    ╚════════════════════════════════════════════════════════════╝
-]]
+-- [[ HỆ THỐNG VĨ LỎ - PHIÊN BẢN CÔNG KHAI SIÊU CẤP ]]
+-- [[ FULL: POV, SPEED, JUMP, FLY, ESP, TP, FLING, FAKE CHAT ]]
 
--- Khởi tạo thư viện Rayfield
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- Tạo cửa sổ chính
 local Window = Rayfield:CreateWindow({
    Name = "Hệ thống Vĩ lỏ - PRO VIP",
-   LoadingTitle = "Đang Khởi Chạy Hệ Thống Vĩ Lỏ...",
+   LoadingTitle = "Đang Khởi Chạy Hệ Thống...",
    LoadingSubtitle = "by Nguyễn Vĩ DZ",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "ViloSystem", 
-      FileName = "ViloConfig"
-   },
-   KeySystem = false -- Tắt key cho anh em dễ xài
+   ConfigurationSaving = { Enabled = false },
+   KeySystem = false
 })
 
--- Các dịch vụ hệ thống (Services)
-local Players = game:GetService("Players")
-local LP = Players.LocalPlayer
+local LP = game.Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
-local Lighting = game:GetService("Lighting")
 local StarterGui = game:GetService("StarterGui")
 
--- [[ BIẾN TOÀN CỤC ]]
+-- Biến hệ thống
 _G.WalkSpeed = 16
 _G.JumpPower = 50
 _G.InfJump = false
@@ -39,19 +25,18 @@ _G.Noclip = false
 _G.ESP = false
 _G.Fly = false
 _G.FlySpeed = 50
-_G.FullBright = false
-_G.Aimbot = false
 local SelectedPlayer = nil
-local FakeChatMessage = "Tui là fan cứng Vĩ lỏ!"
+local FakeChatMessage = "Tui là fan Vĩ lỏ nè!"
 
--- [[ TAB 1: NHÂN VẬT CHÍNH ]]
+-- [[ TAB 1: NHÂN VẬT ]]
 local Tab1 = Window:CreateTab("🎮 Nhân Vật", 4483362458)
-local SecMain = Tab1:CreateSection("Cấu Hình Chỉ Số")
+Tab1:CreateSection("Cấu Hình Chỉ Số")
 
+-- Chỉnh POV Camera (Đã fix đơn vị là Độ)
 Tab1:CreateSlider({
    Name = "Tầm Nhìn (POV Camera)",
    Min = 30, Max = 120, Default = 70, Color = Color3.fromRGB(44, 120, 224),
-   Increment = 1, ValueName = "Độ",
+   Increment = 1, ValueName = "độ", 
    Callback = function(Value) Camera.FieldOfView = Value end,
 })
 
@@ -81,56 +66,38 @@ Tab1:CreateToggle({
    Callback = function(Value) _G.Noclip = Value end,
 })
 
-Tab1:CreateToggle({
-   Name = "Sáng Màn Hình (FullBright)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.FullBright = Value
-      if Value then
-         Lighting.Brightness = 2; Lighting.ClockTime = 14; Lighting.GlobalShadows = false
-         Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-      else
-         Lighting.Brightness = 1; Lighting.ClockTime = 12; Lighting.GlobalShadows = true
-         Lighting.Ambient = Color3.fromRGB(127, 127, 127)
-      end
-   end,
-})
-
--- [[ TAB 2: PHÁ HOẠI SERVER (CHẾ) ]]
+-- [[ TAB 2: CHẾ (PHÁ HOẠI) ]]
 local TabChe = Window:CreateTab("🌀 Chế Mode", 4483362458)
-TabChe:CreateSection("Hệ Thống Phá Đứa Khác")
+TabChe:CreateSection("Fake Chat & Tấn Công")
 
--- Hàm lấy danh sách người chơi
-local function RefreshPlayers()
-    local names = {}
-    for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LP then table.insert(names, v.Name) end
+local function GetPlayers()
+    local p = {}
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= LP then table.insert(p, v.Name) end
     end
-    return names
+    return p
 end
 
-local PlayerDropdown = TabChe:CreateDropdown({
-   Name = "Chọn Con Mồi",
-   Options = RefreshPlayers(),
+local PlayerDrop = TabChe:CreateDropdown({
+   Name = "Chọn Nạn Nhân",
+   Options = GetPlayers(),
    CurrentOption = "",
    Callback = function(Option) SelectedPlayer = Option end,
 })
 
 TabChe:CreateButton({
-   Name = "Làm Mới Danh Sách Người Chơi",
-   Callback = function() PlayerDropdown:Refresh(RefreshPlayers()) end,
+   Name = "Làm Mới Danh Sách",
+   Callback = function() PlayerDrop:Refresh(GetPlayers()) end,
 })
 
-TabChe:CreateSection("Tính Năng Đổ Thừa (Fake Chat)")
-
 TabChe:CreateInput({
-   Name = "Nội Dung Muốn Nó Nói",
-   PlaceholderText = "Nhập vào đây...",
+   Name = "Nội Dung Fake Chat",
+   PlaceholderText = "Nhập câu muốn nó nói...",
    Callback = function(Text) FakeChatMessage = Text end,
 })
 
 TabChe:CreateButton({
-   Name = "Fake Chat (Chụp Ảnh Bóc Phốt)",
+   Name = "Fake Chat (Bóc Phốt)",
    Callback = function()
       if SelectedPlayer then
          StarterGui:SetCore("ChatMakeSystemMessage", {
@@ -139,50 +106,42 @@ TabChe:CreateButton({
             Font = Enum.Font.SourceSansBold,
             FontSize = Enum.FontSize.Size18
          })
-         Rayfield:Notify({Title = "Thành Công", Content = "Đã fake chat thằng " .. SelectedPlayer, Duration = 3})
-      end
-   end,
-})
-
-TabChe:CreateSection("Tính Năng Tấn Công")
-
-TabChe:CreateButton({
-   Name = "Bay Đến Nó (TP)",
-   Callback = function()
-      if SelectedPlayer then
-         local target = Players:FindFirstChild(SelectedPlayer)
-         if target and target.Character then
-            LP.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
-         end
       end
    end,
 })
 
 TabChe:CreateButton({
-   Name = "Fling (Hất Văng Nó Mất Xác)",
+   Name = "Fling (Hất Văng Nó)",
    Callback = function()
       if SelectedPlayer then
-         local target = Players:FindFirstChild(SelectedPlayer)
-         if target and target.Character then
+         local t = game.Players:FindFirstChild(SelectedPlayer)
+         if t and t.Character then
             local thrust = Instance.new("BodyAngularVelocity", LP.Character.HumanoidRootPart)
             thrust.MaxTorque = Vector3.new(0, math.huge, 0); thrust.P = math.huge; thrust.AngularVelocity = Vector3.new(0, 99999, 0)
             local oldPos = LP.Character.HumanoidRootPart.CFrame
             _G.Noclip = true
-            for i = 1, 60 do 
-                task.wait(0.01) 
-                LP.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame 
-            end
+            for i = 1, 60 do task.wait(0.01) LP.Character.HumanoidRootPart.CFrame = t.Character.HumanoidRootPart.CFrame end
             thrust:Destroy(); LP.Character.HumanoidRootPart.CFrame = oldPos; _G.Noclip = false
          end
       end
    end,
 })
 
--- [[ TAB 3: FLY & VISUALS ]]
-local Tab3 = Window:CreateTab("🦅 Bay & Nhìn", 4483362458)
+TabChe:CreateButton({
+   Name = "Bay Đến Nó (TP)",
+   Callback = function()
+      if SelectedPlayer then
+         local t = game.Players:FindFirstChild(SelectedPlayer)
+         if t and t.Character then LP.Character.HumanoidRootPart.CFrame = t.Character.HumanoidRootPart.CFrame end
+      end
+   end,
+})
+
+-- [[ TAB 3: FLY & ESP ]]
+local Tab3 = Window:CreateTab("🦅 Fly & ESP", 4483362458)
 
 Tab3:CreateToggle({
-   Name = "Bật Chế Độ Bay (Fly)",
+   Name = "Bật Chế Độ Bay",
    CurrentValue = false,
    Callback = function(Value)
       _G.Fly = Value
@@ -207,27 +166,25 @@ Tab3:CreateToggle({
 })
 
 Tab3:CreateInput({
-   Name = "Tốc Độ Bay (Fly Speed)",
-   PlaceholderText = "Mặc định 50",
-   Callback = function(Text) _G.FlySpeed = tonumber(Text) or 50 end,
+   Name = "Tốc Độ Bay",
+   PlaceholderText = "50",
+   Callback = function(t) _G.FlySpeed = tonumber(t) or 50 end,
 })
 
 Tab3:CreateToggle({
-   Name = "Bật ESP Player (Hiện Khung Đỏ)",
+   Name = "Bật ESP Player",
    CurrentValue = false,
    Callback = function(Value)
       _G.ESP = Value
       if not Value then
-         for _, pl in pairs(Players:GetPlayers()) do
-            if pl.Character and pl.Character:FindFirstChild("ViloHighlight") then 
-                pl.Character.ViloHighlight:Destroy() 
-            end
+         for _, pl in pairs(game.Players:GetPlayers()) do
+            if pl.Character and pl.Character:FindFirstChild("ViloHighlight") then pl.Character.ViloHighlight:Destroy() end
          end
       end
    end,
 })
 
--- [[ HỆ THỐNG VÒNG LẶP XỬ LÝ (CORE) ]]
+-- [[ CORE LOGIC ]]
 UIS.JumpRequest:Connect(function()
     if _G.InfJump then LP.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping") end
 end)
@@ -238,15 +195,15 @@ RunService.Stepped:Connect(function()
         LP.Character.Humanoid.JumpPower = _G.JumpPower
     end
     if _G.Noclip and LP.Character then
-        for _, part in pairs(LP.Character:GetDescendants()) do
-            if part:IsA("BasePart") then part.CanCollide = false end
+        for _, v in pairs(LP.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
         end
     end
 end)
 
 RunService.RenderStepped:Connect(function()
     if _G.ESP then
-        for _, pl in pairs(Players:GetPlayers()) do
+        for _, pl in pairs(game.Players:GetPlayers()) do
             if pl ~= LP and pl.Character and not pl.Character:FindFirstChild("ViloHighlight") then
                 local h = Instance.new("Highlight", pl.Character)
                 h.Name = "ViloHighlight"; h.FillColor = Color3.fromRGB(255, 0, 0)
@@ -255,10 +212,4 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Thông báo khi menu đã sẵn sàng
-Rayfield:Notify({
-   Title = "Hệ thống Vĩ lỏ Online!",
-   Content = "Chào mừng ní Nguyễn Vĩ đã quay trở lại!",
-   Duration = 5,
-   Image = 4483362458,
-})
+Rayfield:Notify({Title = "Hệ thống Vĩ lỏ!", Content = "Đã tải xong full chức năng cho ní!", Duration = 5})
