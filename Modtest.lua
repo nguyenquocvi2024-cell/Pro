@@ -1,6 +1,8 @@
 -- [[ HỆ THỐNG VĨ LỎ - PHIÊN BẢN CÔNG KHAI SIÊU CẤP ]]
 -- [[ FULL: POV, SPEED, JUMP, FLY, ESP, TP, FLING, FAKE CHAT ]]
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
 local Window = Rayfield:CreateWindow({
    Name = "Hệ thống Vĩ lỏ - PRO VIP",
    LoadingTitle = "Đang Khởi Chạy Hệ Thống...",
@@ -28,41 +30,42 @@ local FakeChatMessage = "Tui là fan Vĩ lỏ nè!"
 local FlyBV = nil
 local FlyBG = nil
 
--- [[ TAB 1: NHÂN VẬT ]]
-local Tab1 = Window:CreateTab("🎮 Nhân Vật", 4483362458)
-Tab1:CreateSection("Cấu Hình Chỉ Số")
+-- [[ TAB 1: NHÂN VẬT ]] -- Dùng icon mặc định
+local Tab1 = Window:CreateTab("🎮 Nhân Vật", nil)
 
--- FIX: Chỉnh POV Camera - ĐÃ SỬA ĐÚNG ĐƠN VỊ
+Tab1:CreateSection("⚙️ Cấu Hình Chỉ Số")
+
+-- FIX: Chỉnh POV Camera
 Tab1:CreateSlider({
-   Name = "Tầm Nhìn (POV Camera)",
+   Name = "👁️ Tầm Nhìn (POV Camera)",
    Min = 30,
    Max = 120,
    Default = 70,
    Color = Color3.fromRGB(44, 120, 224),
    Increment = 1,
-   ValueName = "độ",  -- QUAN TRỌNG: Đã sửa từ "studs" thành "độ"
+   ValueName = "độ",
    Callback = function(Value)
       if Camera then
-         Camera.FieldOfView = Value  -- Giá trị từ 30-120 độ
+         Camera.FieldOfView = Value
       end
    end,
 })
 
 Tab1:CreateSlider({
-   Name = "Tốc Độ Chạy (Speed)",
+   Name = "🏃 Tốc Độ Chạy (Speed)",
    Min = 16,
    Max = 1000,
    Default = 16,
    Color = Color3.fromRGB(44, 120, 224),
    Increment = 1,
-   ValueName = "studs/s",  -- Đơn vị tốc độ
+   ValueName = "studs/s",
    Callback = function(Value)
       _G.WalkSpeed = Value
    end,
 })
 
 Tab1:CreateSlider({
-   Name = "Sức Mạnh Nhảy (Jump)",
+   Name = "🦘 Sức Mạnh Nhảy (Jump)",
    Min = 50,
    Max = 500,
    Default = 50,
@@ -75,7 +78,7 @@ Tab1:CreateSlider({
 })
 
 Tab1:CreateToggle({
-   Name = "Nhảy Vô Hạn (Inf Jump)",
+   Name = "♾️ Nhảy Vô Hạn (Inf Jump)",
    CurrentValue = false,
    Callback = function(Value)
       _G.InfJump = Value
@@ -83,7 +86,7 @@ Tab1:CreateToggle({
 })
 
 Tab1:CreateToggle({
-   Name = "Đi Xuyên Tường (Noclip)",
+   Name = "🧱 Đi Xuyên Tường (Noclip)",
    CurrentValue = false,
    Callback = function(Value)
       _G.Noclip = Value
@@ -91,8 +94,9 @@ Tab1:CreateToggle({
 })
 
 -- [[ TAB 2: CHẾ MODE ]]
-local TabChe = Window:CreateTab("🌀 Chế Mode", 4483362458)
-TabChe:CreateSection("Fake Chat & Tấn Công")
+local TabChe = Window:CreateTab("🌀 Chế Mode", nil)
+
+TabChe:CreateSection("💬 Fake Chat & ⚔️ Tấn Công")
 
 local function GetPlayers()
     local p = {}
@@ -105,11 +109,18 @@ local function GetPlayers()
 end
 
 local PlayerDrop = TabChe:CreateDropdown({
-   Name = "Chọn Nạn Nhân",
+   Name = "🎯 Chọn Nạn Nhân",
    Options = GetPlayers(),
    CurrentOption = "",
    Callback = function(Option)
       SelectedPlayer = Option
+      if Option and Option ~= "" then
+         Rayfield:Notify({
+            Title = "Đã chọn",
+            Content = "Nạn nhân: " .. Option,
+            Duration = 2
+         })
+      end
    end,
 })
 
@@ -118,7 +129,7 @@ TabChe:CreateButton({
    Callback = function()
       PlayerDrop:Refresh(GetPlayers())
       Rayfield:Notify({
-         Title = "Đã làm mới",
+         Title = "✅ Đã làm mới",
          Content = "Danh sách người chơi đã được cập nhật!",
          Duration = 2
       })
@@ -146,7 +157,7 @@ TabChe:CreateButton({
             FontSize = Enum.FontSize.Size18
          })
          Rayfield:Notify({
-            Title = "Đã gửi tin nhắn",
+            Title = "✅ Đã gửi",
             Content = "Đã fake tin nhắn từ " .. SelectedPlayer,
             Duration = 2
          })
@@ -201,9 +212,15 @@ TabChe:CreateButton({
          _G.Noclip = oldNoclip
          
          Rayfield:Notify({
-            Title = "Đã fling",
+            Title = "✅ Đã fling",
             Content = "Đã hất văng " .. SelectedPlayer,
             Duration = 2
+         })
+      else
+         Rayfield:Notify({
+            Title = "⚠️ Lỗi",
+            Content = "Không tìm thấy nhân vật của " .. SelectedPlayer,
+            Duration = 3
          })
       end
    end,
@@ -226,16 +243,24 @@ TabChe:CreateButton({
          LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
          LP.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
          Rayfield:Notify({
-            Title = "Đã TP",
+            Title = "✅ Đã TP",
             Content = "Đã bay đến " .. SelectedPlayer,
             Duration = 2
+         })
+      else
+         Rayfield:Notify({
+            Title = "⚠️ Lỗi",
+            Content = "Không tìm thấy nhân vật của " .. SelectedPlayer,
+            Duration = 3
          })
       end
    end,
 })
 
 -- [[ TAB 3: FLY & ESP ]]
-local Tab3 = Window:CreateTab("🦅 Fly & ESP", 4483362458)
+local Tab3 = Window:CreateTab("🦅 Fly & ESP", nil)
+
+Tab3:CreateSection("✈️ Chế Độ Bay & 👁️ ESP")
 
 Tab3:CreateToggle({
    Name = "✈️ Bật Chế Độ Bay",
@@ -317,6 +342,12 @@ Tab3:CreateToggle({
                pl.Character.ViloHighlight:Destroy()
             end
          end
+      else
+         Rayfield:Notify({
+            Title = "👁️ ESP đã bật",
+            Content = "Đang hiển thị tất cả người chơi",
+            Duration = 2
+         })
       end
    end,
 })
@@ -354,6 +385,7 @@ RunService.RenderStepped:Connect(function()
                 h.Name = "ViloHighlight"
                 h.FillColor = Color3.fromRGB(255, 0, 0)
                 h.OutlineColor = Color3.fromRGB(255, 255, 255)
+                h.FillTransparency = 0.5
                 h.Parent = pl.Character
             end
         end
@@ -370,6 +402,7 @@ game.Players.PlayerAdded:Connect(function(player)
                 h.Name = "ViloHighlight"
                 h.FillColor = Color3.fromRGB(255, 0, 0)
                 h.OutlineColor = Color3.fromRGB(255, 255, 255)
+                h.FillTransparency = 0.5
                 h.Parent = character
             end
         end)
@@ -394,3 +427,8 @@ Rayfield:Notify({
    Content = "Đã tải xong full chức năng cho ní!",
    Duration = 5
 })
+
+-- In ra console để kiểm tra
+print("=== HỆ THỐNG VĨ LỎ ĐÃ KHỞI ĐỘNG ===")
+print("Các tab: Nhân Vật, Chế Mode, Fly & ESP")
+print("=====================================")
