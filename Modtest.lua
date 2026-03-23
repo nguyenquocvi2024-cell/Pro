@@ -1,536 +1,462 @@
--- [[ HỆ THỐNG VĨ LỎ - PRO VIP ]]
--- [[ FULL: MAIN, FLY & ESP, CHẾ MODE, SETTINGS, NÂNG CẤP ]]
+-- [[ VIP ULTRA MENU - BẢN FULL CHỨC NĂNG ]]
+-- [[ MỞ MENU LÀ DÙNG NGAY - KHÔNG CẦN SETUP ]]
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Hệ thống Vĩ lỏ - PRO VIP",
-   LoadingTitle = "Đang Tải Hệ Thống Vĩ Lỏ...",
-   LoadingSubtitle = "by Nguyễn Vĩ DZ",
-   ConfigurationSaving = { Enabled = false },
+   Name = "⭐ VIP ULTRA MENU ⭐",
+   LoadingTitle = "ĐANG KHỞI TẠO...",
+   LoadingSubtitle = "Nguyễn Vĩ PRO | 6 TAB SIÊU KHỦNG",
+   ConfigurationSaving = { Enabled = true },
    KeySystem = false
 })
 
+-- ====== BIẾN TOÀN CỤC ======
 local LP = game.Players.LocalPlayer
-local Camera = game.Workspace.CurrentCamera
-local Lighting = game:GetService("Lighting")
+local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
-local StarterGui = game:GetService("StarterGui")
-local TweenService = game:GetService("TweenService")
 
--- Biến hệ thống
-_G.ESP_Enabled = false
-_G.Fly_Enabled = false
-_G.Aimbot_Enabled = false
-_G.Noclip_Enabled = false
-_G.FullBright_Enabled = false
-_G.FlySpeed = 50
-_G.WalkSpeed = 16
-_G.JumpPower = 50
-_G.InfJump = false
-_G.Spin_Enabled = false
-_G.SpinSpeed = 50
-_G.NoFallDamage = false
-_G.AutoFarm_Enabled = false
+-- TẤT CẢ TÍNH NĂNG ĐỀU CÓ BẬT/TẮT
+_G = {
+    Speed = 16,
+    JumpPower = 50,
+    InfJump = false,
+    Noclip = false,
+    Fly = false,
+    FlySpeed = 50,
+    Aimbot = false,
+    AimbotPart = "Head",
+    AimbotFOV = 400,
+    ESP = false,
+    ESPColor = Color3.fromRGB(255, 0, 0),
+    ShowNames = true,
+    ShowDistance = true,
+    FullBright = false,
+    Spin = false,
+    SpinSpeed = 50,
+    SelectedPlayer = nil,
+}
 
-local FlyBV = nil
-local FlyBG = nil
-local SelectedPlayer = nil
-local FakeMessage = "Tui là fan Vĩ lỏ nè!"
-local ESPObjects = {}
+local FlyBV, FlyBG = nil, nil
 
--- ===========================
--- TAB 1: MAIN (ĐÃ NÂNG CẤP)
--- ===========================
-local Tab1 = Window:CreateTab("🎮 Main", nil)
+-- ==================== TAB 1: GOD MODE ====================
+local Tab1 = Window:CreateTab("👑 GOD MODE", nil)
 
-Tab1:CreateSection("⚙️ Điều Khiển Nhân Vật")
+Tab1:CreateSection("⚡ THÔNG SỐ NHÂN VẬT")
 
--- Noclip
-Tab1:CreateToggle({
-   Name = "🧱 Đi Xuyên Tường (Noclip)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.Noclip_Enabled = Value
-      Rayfield:Notify({Title = "Noclip", Content = Value and "Đã bật" or "Đã tắt", Duration = 2})
-   end,
-})
-
--- Fullbright
-Tab1:CreateToggle({
-   Name = "🔆 Nhìn Trong Bóng Tối (Fullbright)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.FullBright_Enabled = Value
-      if Value then
-         Lighting.Brightness = 2
-         Lighting.ClockTime = 14
-         Lighting.FogEnd = 100000
-         Lighting.GlobalShadows = false
-         Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-      else
-         Lighting.Brightness = 1
-         Lighting.ClockTime = 12
-         Lighting.GlobalShadows = true
-         Lighting.Ambient = Color3.fromRGB(127, 127, 127)
-      end
-   end,
-})
-
--- Chỉnh POV/FOV
-Tab1:CreateInput({
-   Name = "👁️ Chỉnh POV (FOV)",
-   PlaceholderText = "Nhập số (30-120)...",
-   Callback = function(Text)
-      local num = tonumber(Text)
-      if num and num >= 30 and num <= 120 then
-         Camera.FieldOfView = num
-         Rayfield:Notify({Title = "FOV", Content = "Đã chỉnh thành " .. num .. " độ", Duration = 2})
-      end
-   end,
-})
-
--- Aimbot
-Tab1:CreateToggle({
-   Name = "🎯 Bật Aimbot",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.Aimbot_Enabled = Value
-      Rayfield:Notify({Title = "Aimbot", Content = Value and "Đã bật" or "Đã tắt", Duration = 2})
-   end,
-})
-
-Tab1:CreateSection("🏃 Tốc Độ & Nhảy")
-
--- Speed Slider (ĐÃ FIX LỖI 750)
 Tab1:CreateSlider({
-   Name = "🏃 Tốc Độ Chạy",
-   Min = 16,
-   Max = 500,
-   Default = 16,
-   Color = Color3.fromRGB(44, 120, 224),
-   Increment = 1,
-   ValueName = "studs/s",
-   Callback = function(Value)
-      _G.WalkSpeed = Value
-   end,
+    Name = "🏃 TỐC ĐỘ CHẠY",
+    Min = 16, Max = 500, Default = 16,
+    Color = Color3.fromRGB(255, 70, 70),
+    Increment = 1, ValueName = "studs/s",
+    Callback = function(v) _G.Speed = v end
 })
 
--- Jump Power Slider
 Tab1:CreateSlider({
-   Name = "🦘 Sức Mạnh Nhảy",
-   Min = 50,
-   Max = 500,
-   Default = 50,
-   Color = Color3.fromRGB(44, 120, 224),
-   Increment = 1,
-   ValueName = "studs",
-   Callback = function(Value)
-      _G.JumpPower = Value
-   end,
+    Name = "🦘 SỨC MẠNH NHẢY",
+    Min = 50, Max = 500, Default = 50,
+    Color = Color3.fromRGB(255, 120, 70),
+    Increment = 1, ValueName = "studs",
+    Callback = function(v) _G.JumpPower = v end
 })
 
--- Inf Jump
 Tab1:CreateToggle({
-   Name = "♾️ Nhảy Vô Hạn (Inf Jump)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.InfJump = Value
-   end,
+    Name = "♾️ NHẢY VÔ HẠN",
+    CurrentValue = false,
+    Callback = function(v) _G.InfJump = v end
 })
 
--- No Fall Damage
 Tab1:CreateToggle({
-   Name = "💫 Không Sát Thương Rơi",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.NoFallDamage = Value
-   end,
+    Name = "🧱 XUYÊN TƯỜNG (NOCLIP)",
+    CurrentValue = false,
+    Callback = function(v) _G.Noclip = v end
 })
 
--- ===========================
--- TAB 2: FLY & ESP (NÂNG CẤP)
--- ===========================
-local Tab2 = Window:CreateTab("🦅 Fly & ESP", nil)
+Tab1:CreateToggle({
+    Name = "🔆 SÁNG HOÀN HẢO (FULLBRIGHT)",
+    CurrentValue = false,
+    Callback = function(v)
+        _G.FullBright = v
+        if v then
+            game.Lighting.Brightness = 2
+            game.Lighting.ClockTime = 14
+            game.Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+            game.Lighting.GlobalShadows = false
+        else
+            game.Lighting.Brightness = 1
+            game.Lighting.ClockTime = 12
+            game.Lighting.Ambient = Color3.fromRGB(127, 127, 127)
+            game.Lighting.GlobalShadows = true
+        end
+    end
+})
 
-Tab2:CreateSection("✈️ Chế Độ Bay")
+-- ==================== TAB 2: AIMBOT ====================
+local Tab2 = Window:CreateTab("🎯 AIMBOT PRO", nil)
 
--- Fly
+Tab2:CreateSection("🎯 CÀI ĐẶT AIMBOT")
+
 Tab2:CreateToggle({
-   Name = "✈️ Bật Fly (Điều Khiển Tay)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.Fly_Enabled = Value
-      if Value then
-         if not LP.Character or not LP.Character:FindFirstChild("HumanoidRootPart") then
-            Rayfield:Notify({Title = "Lỗi", Content = "Không tìm thấy nhân vật!", Duration = 2})
-            _G.Fly_Enabled = false
-            return
-         end
-         
-         FlyBG = Instance.new("BodyGyro")
-         FlyBV = Instance.new("BodyVelocity")
-         FlyBG.Parent = LP.Character.HumanoidRootPart
-         FlyBV.Parent = LP.Character.HumanoidRootPart
-         FlyBG.P = 9e4
-         FlyBG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-         FlyBV.maxForce = Vector3.new(9e9, 9e9, 9e9)
-         
-         spawn(function()
-            while _G.Fly_Enabled and LP.Character and LP.Character:FindFirstChild("Humanoid") do
-               task.wait()
-               LP.Character.Humanoid.PlatformStand = true
-               if FlyBV then
-                  local moveDir = LP.Character.Humanoid.MoveDirection
-                  FlyBV.velocity = moveDir * _G.FlySpeed
-               end
-               if FlyBG and Camera then
-                  FlyBG.cframe = Camera.CFrame
-               end
+    Name = "🎯 BẬT AIMBOT (NHẮM ĐẦU)",
+    CurrentValue = false,
+    Callback = function(v) _G.Aimbot = v end
+})
+
+Tab2:CreateDropdown({
+    Name = "🎯 NHẮM VÀO BỘ PHẬN",
+    Options = {"Head", "HumanoidRootPart", "Torso", "UpperTorso"},
+    CurrentOption = "Head",
+    Callback = function(v) _G.AimbotPart = v end
+})
+
+Tab2:CreateSlider({
+    Name = "📏 PHẠM VI AIMBOT (FOV)",
+    Min = 100, Max = 800, Default = 400,
+    Color = Color3.fromRGB(255, 50, 50),
+    Increment = 10, ValueName = "studs",
+    Callback = function(v) _G.AimbotFOV = v end
+})
+
+local TargetLabel = Tab2:CreateLabel("🎯 TARGET: Chưa có")
+
+-- ==================== TAB 3: ESP ====================
+local Tab3 = Window:CreateTab("👁️ ESP PRO", nil)
+
+Tab3:CreateSection("👁️ CÀI ĐẶT ESP")
+
+Tab3:CreateToggle({
+    Name = "👁️ BẬT ESP (CHỐNG TÀNG HÌNH)",
+    CurrentValue = false,
+    Callback = function(v) 
+        _G.ESP = v
+        if not v then
+            for _, pl in pairs(game.Players:GetPlayers()) do
+                if pl.Character then
+                    if pl.Character:FindFirstChild("ESP_Box") then pl.Character.ESP_Box:Destroy() end
+                    if pl.Character:FindFirstChild("ESP_Name") then pl.Character.ESP_Name:Destroy() end
+                end
             end
+        end
+    end
+})
+
+Tab3:CreateColorPicker({
+    Name = "🎨 MÀU ESP",
+    Color = Color3.fromRGB(255, 0, 0),
+    Callback = function(c) _G.ESPColor = c end
+})
+
+Tab3:CreateToggle({
+    Name = "🏷️ HIỂN THỊ TÊN",
+    CurrentValue = true,
+    Callback = function(v) _G.ShowNames = v end
+})
+
+Tab3:CreateToggle({
+    Name = "📏 HIỂN THỊ KHOẢNG CÁCH",
+    CurrentValue = true,
+    Callback = function(v) _G.ShowDistance = v end
+})
+
+-- ==================== TAB 4: FLY ====================
+local Tab4 = Window:CreateTab("✈️ FLY MODE", nil)
+
+Tab4:CreateSection("✈️ CHẾ ĐỘ BAY")
+
+Tab4:CreateToggle({
+    Name = "✈️ BẬT FLY (WASD ĐIỀU KHIỂN)",
+    CurrentValue = false,
+    Callback = function(v)
+        _G.Fly = v
+        if v then
+            if not LP.Character or not LP.Character:FindFirstChild("HumanoidRootPart") then
+                _G.Fly = false
+                return
+            end
+            FlyBG = Instance.new("BodyGyro")
+            FlyBV = Instance.new("BodyVelocity")
+            FlyBG.Parent = LP.Character.HumanoidRootPart
+            FlyBV.Parent = LP.Character.HumanoidRootPart
+            FlyBG.P = 9e4
+            FlyBG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+            FlyBV.maxForce = Vector3.new(9e9, 9e9, 9e9)
+            spawn(function()
+                while _G.Fly and LP.Character do
+                    task.wait()
+                    if LP.Character:FindFirstChild("Humanoid") then
+                        LP.Character.Humanoid.PlatformStand = true
+                        if FlyBV then FlyBV.velocity = LP.Character.Humanoid.MoveDirection * _G.FlySpeed end
+                        if FlyBG then FlyBG.cframe = Camera.CFrame end
+                    end
+                end
+                if FlyBV then FlyBV:Destroy() end
+                if FlyBG then FlyBG:Destroy() end
+                if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+                    LP.Character.Humanoid.PlatformStand = false
+                end
+            end)
+        else
             if FlyBV then FlyBV:Destroy() end
             if FlyBG then FlyBG:Destroy() end
-            FlyBV = nil
-            FlyBG = nil
             if LP.Character and LP.Character:FindFirstChild("Humanoid") then
-               LP.Character.Humanoid.PlatformStand = false
+                LP.Character.Humanoid.PlatformStand = false
             end
-         end)
-      else
-         if FlyBV then FlyBV:Destroy() end
-         if FlyBG then FlyBG:Destroy() end
-         FlyBV = nil
-         FlyBG = nil
-         if LP.Character and LP.Character:FindFirstChild("Humanoid") then
-            LP.Character.Humanoid.PlatformStand = false
-         end
-      end
-   end,
+        end
+    end
 })
 
--- Tốc độ bay
-Tab2:CreateInput({
-   Name = "⚡ Tốc Độ Bay",
-   PlaceholderText = "Mặc định: 50",
-   Callback = function(Text)
-      local num = tonumber(Text)
-      if num then _G.FlySpeed = num end
-   end,
+Tab4:CreateInput({
+    Name = "⚡ TỐC ĐỘ BAY",
+    PlaceholderText = "Mặc định: 50",
+    Callback = function(t)
+        local num = tonumber(t)
+        if num then _G.FlySpeed = num end
+    end
 })
 
-Tab2:CreateSection("👁️ ESP Siêu Cấp (Chống Tàng Hình)")
+-- ==================== TAB 5: CHẾ MODE ====================
+local Tab5 = Window:CreateTab("🌀 CHẾ MODE", nil)
 
--- Hàm tạo ESP nâng cao
-local function CreateAdvancedESP(player)
-   if not player.Character then return end
-   if ESPObjects[player] then
-      if ESPObjects[player].Highlight then ESPObjects[player].Highlight:Destroy() end
-      if ESPObjects[player].Billboard then ESPObjects[player].Billboard:Destroy() end
-      ESPObjects[player] = nil
-   end
-   
-   local highlight = Instance.new("Highlight")
-   highlight.Name = "ViloESP"
-   highlight.FillColor = Color3.fromRGB(255, 0, 0)
-   highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-   highlight.FillTransparency = 0.5
-   highlight.Parent = player.Character
-   
-   local billboard = Instance.new("BillboardGui")
-   billboard.Name = "NameTag"
-   billboard.Adornee = player.Character:FindFirstChild("Head") or player.Character:FindFirstChild("HumanoidRootPart")
-   billboard.Size = UDim2.new(0, 120, 0, 35)
-   billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-   billboard.AlwaysOnTop = true
-   billboard.Parent = player.Character
-   
-   local frame = Instance.new("Frame")
-   frame.Size = UDim2.new(1, 0, 1, 0)
-   frame.BackgroundTransparency = 0.3
-   frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-   frame.BorderSizePixel = 0
-   frame.Parent = billboard
-   
-   local nameLabel = Instance.new("TextLabel")
-   nameLabel.Size = UDim2.new(1, 0, 0.6, 0)
-   nameLabel.BackgroundTransparency = 1
-   nameLabel.Text = player.Name
-   nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-   nameLabel.TextScaled = true
-   nameLabel.Font = Enum.Font.GothamBold
-   nameLabel.Parent = frame
-   
-   local distLabel = Instance.new("TextLabel")
-   distLabel.Size = UDim2.new(1, 0, 0.4, 0)
-   distLabel.Position = UDim2.new(0, 0, 0.6, 0)
-   distLabel.BackgroundTransparency = 1
-   distLabel.Text = "0m"
-   distLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
-   distLabel.TextScaled = true
-   distLabel.Font = Enum.Font.Gotham
-   distLabel.Parent = frame
-   
-   ESPObjects[player] = {
-      Highlight = highlight,
-      Billboard = billboard,
-      DistLabel = distLabel
-   }
-end
-
--- ESP Toggle
-Tab2:CreateToggle({
-   Name = "👁️ Bật ESP (Phát hiện tàng hình)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.ESP_Enabled = Value
-      if not Value then
-         for _, player in pairs(ESPObjects) do
-            if player.Highlight then player.Highlight:Destroy() end
-            if player.Billboard then player.Billboard:Destroy() end
-         end
-         ESPObjects = {}
-      else
-         for _, player in pairs(game.Players:GetPlayers()) do
-            if player ~= LP then
-               CreateAdvancedESP(player)
-            end
-         end
-      end
-   end,
-})
-
--- ===========================
--- TAB 3: CHẾ MODE (MỚI)
--- ===========================
-local Tab3 = Window:CreateTab("🌀 Chế Mode", nil)
-
-Tab3:CreateSection("💬 Fake Chat")
+Tab5:CreateSection("🎯 CHỌN NẠN NHÂN")
 
 local function GetPlayers()
-   local players = {}
-   for _, v in pairs(game.Players:GetPlayers()) do
-      if v ~= LP then table.insert(players, v.Name) end
-   end
-   return players
+    local list = {}
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= LP then table.insert(list, v.Name) end
+    end
+    return list
 end
 
-local PlayerDropdown = Tab3:CreateDropdown({
-   Name = "🎯 Chọn Nạn Nhân",
-   Options = GetPlayers(),
-   CurrentOption = "",
-   Callback = function(Option)
-      SelectedPlayer = Option
-   end,
+local PlayerDrop = Tab5:CreateDropdown({
+    Name = "🎯 DANH SÁCH NGƯỜI CHƠI",
+    Options = GetPlayers(),
+    CurrentOption = "",
+    Callback = function(v) _G.SelectedPlayer = v end
 })
 
-Tab3:CreateButton({
-   Name = "🔄 Làm Mới Danh Sách",
-   Callback = function()
-      PlayerDropdown:Refresh(GetPlayers())
-   end,
+Tab5:CreateButton({
+    Name = "🔄 LÀM MỚI DANH SÁCH",
+    Callback = function() PlayerDrop:Refresh(GetPlayers()) end
 })
 
-Tab3:CreateInput({
-   Name = "💬 Nội Dung Fake Chat",
-   PlaceholderText = "Nhập tin nhắn...",
-   Callback = function(Text)
-      if Text and Text ~= "" then FakeMessage = Text end
-   end,
-})
+Tab5:CreateSection("⚔️ HÀNH ĐỘNG")
 
-Tab3:CreateButton({
-   Name = "📢 Gửi Fake Chat",
-   Callback = function()
-      if SelectedPlayer and SelectedPlayer ~= "" then
-         StarterGui:SetCore("ChatMakeSystemMessage", {
-            Text = "[" .. SelectedPlayer .. "]: " .. FakeMessage,
-            Color = Color3.fromRGB(255, 255, 255),
-            Font = Enum.Font.SourceSansBold,
-         })
-      end
-   end,
-})
-
-Tab3:CreateSection("⚔️ Combat")
-
--- TP
-Tab3:CreateButton({
-   Name = "✨ Bay Đến Nó (TP)",
-   Callback = function()
-      if not SelectedPlayer then
-         Rayfield:Notify({Title = "Lỗi", Content = "Chọn nạn nhân trước!", Duration = 2})
-         return
-      end
-      local target = game.Players:FindFirstChild(SelectedPlayer)
-      if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-         LP.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
-      end
-   end,
-})
-
--- Fling
-Tab3:CreateButton({
-   Name = "🌀 Fling (Hất Văng)",
-   Callback = function()
-      if not SelectedPlayer then
-         Rayfield:Notify({Title = "Lỗi", Content = "Chọn nạn nhân trước!", Duration = 2})
-         return
-      end
-      local target = game.Players:FindFirstChild(SelectedPlayer)
-      if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-         local thrust = Instance.new("BodyAngularVelocity")
-         thrust.Parent = LP.Character.HumanoidRootPart
-         thrust.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-         thrust.P = 9e9
-         thrust.AngularVelocity = Vector3.new(0, 99999, 0)
-         local oldPos = LP.Character.HumanoidRootPart.CFrame
-         for i = 1, 60 do
-            task.wait(0.01)
+Tab5:CreateButton({
+    Name = "✨ BAY ĐẾN NẠN NHÂN (TP)",
+    Callback = function()
+        if not _G.SelectedPlayer then return end
+        local target = game.Players:FindFirstChild(_G.SelectedPlayer)
+        if target and target.Character then
             LP.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
-         end
-         thrust:Destroy()
-         LP.Character.HumanoidRootPart.CFrame = oldPos
-      end
-   end,
+        end
+    end
 })
 
--- ===========================
--- TAB 4: NÂNG CẤP (MỚI)
--- ===========================
-local Tab4 = Window:CreateTab("⚡ Nâng Cấp", nil)
-
-Tab4:CreateSection("🌀 Hiệu Ứng Đặc Biệt")
-
--- Spin
-Tab4:CreateToggle({
-   Name = "🌀 Xoay Vòng (Spin)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.Spin_Enabled = Value
-      if Value then
-         spawn(function()
-            while _G.Spin_Enabled and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") do
-               task.wait()
-               LP.Character.HumanoidRootPart.CFrame = LP.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(_G.SpinSpeed), 0)
+Tab5:CreateButton({
+    Name = "🌀 FLING (HẤT VĂNG)",
+    Callback = function()
+        if not _G.SelectedPlayer then return end
+        local target = game.Players:FindFirstChild(_G.SelectedPlayer)
+        if target and target.Character then
+            local thrust = Instance.new("BodyAngularVelocity")
+            thrust.Parent = LP.Character.HumanoidRootPart
+            thrust.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+            thrust.P = 9e9
+            thrust.AngularVelocity = Vector3.new(0, 99999, 0)
+            local oldPos = LP.Character.HumanoidRootPart.CFrame
+            for i = 1, 60 do
+                task.wait(0.01)
+                LP.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
             end
-         end)
-      end
-   end,
+            thrust:Destroy()
+            LP.Character.HumanoidRootPart.CFrame = oldPos
+        end
+    end
 })
 
-Tab4:CreateSlider({
-   Name = "🌀 Tốc Độ Xoay",
-   Min = 10,
-   Max = 200,
-   Default = 50,
-   Color = Color3.fromRGB(44, 120, 224),
-   Increment = 1,
-   ValueName = "độ/s",
-   Callback = function(Value)
-      _G.SpinSpeed = Value
-   end,
+Tab5:CreateSection("💬 FAKE CHAT")
+
+local FakeMsg = "Vĩ lỏ đẹp trai!"
+Tab5:CreateInput({
+    Name = "💬 NỘI DUNG FAKE",
+    PlaceholderText = "Nhập tin nhắn...",
+    Callback = function(t) if t ~= "" then FakeMsg = t end end
 })
 
-Tab4:CreateSection("📊 Thông Tin")
-
--- Hiển thị thông tin
-Tab4:CreateButton({
-   Name = "📊 Hiển Thị Thông Tin",
-   Callback = function()
-      local playerCount = #game.Players:GetPlayers()
-      local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
-      Rayfield:Notify({
-         Title = "Thông Tin",
-         Content = "Người chơi: " .. playerCount .. "\nPing: " .. ping .. "ms",
-         Duration = 5
-      })
-   end,
+Tab5:CreateButton({
+    Name = "📢 GỬI FAKE CHAT",
+    Callback = function()
+        if _G.SelectedPlayer then
+            game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+                Text = "[" .. _G.SelectedPlayer .. "]: " .. FakeMsg,
+                Color = Color3.fromRGB(255, 255, 255)
+            })
+        end
+    end
 })
 
--- ===========================
--- CORE LOGIC
--- ===========================
+-- ==================== TAB 6: TIỆN ÍCH ====================
+local Tab6 = Window:CreateTab("🔧 TIỆN ÍCH", nil)
+
+Tab6:CreateSection("🌀 HIỆU ỨNG")
+
+Tab6:CreateToggle({
+    Name = "🌀 XOAY VÒNG (SPIN)",
+    CurrentValue = false,
+    Callback = function(v)
+        _G.Spin = v
+        if v then
+            spawn(function()
+                while _G.Spin and LP.Character do
+                    task.wait()
+                    LP.Character.HumanoidRootPart.CFrame = LP.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(_G.SpinSpeed), 0)
+                end
+            end)
+        end
+    end
+})
+
+Tab6:CreateSlider({
+    Name = "🌀 TỐC ĐỘ XOAY",
+    Min = 10, Max = 200, Default = 50,
+    Color = Color3.fromRGB(255, 100, 100),
+    Increment = 5, ValueName = "độ/s",
+    Callback = function(v) _G.SpinSpeed = v end
+})
+
+Tab6:CreateSection("📊 TIỆN ÍCH KHÁC")
+
+Tab6:CreateButton({
+    Name = "📊 XEM THÔNG TIN SERVER",
+    Callback = function()
+        Rayfield:Notify({
+            Title = "📊 THÔNG TIN",
+            Content = "👥 Người chơi: " .. #game.Players:GetPlayers() .. "\n📡 Ping: " .. game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString() .. "ms",
+            Duration = 5
+        })
+    end
+})
+
+Tab6:CreateButton({
+    Name = "🔄 REJOIN (VÀO LẠI)",
+    Callback = function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId)
+    end
+})
+
+-- ==================== CORE LOGIC ====================
+
+-- Cập nhật Speed/Jump/Noclip
+RunService.Stepped:Connect(function()
+    if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+        LP.Character.Humanoid.WalkSpeed = _G.Speed
+        LP.Character.Humanoid.JumpPower = _G.JumpPower
+    end
+    if _G.Noclip and LP.Character then
+        for _, v in pairs(LP.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
 
 -- Nhảy vô hạn
 UIS.JumpRequest:Connect(function()
-   if _G.InfJump and LP.Character and LP.Character:FindFirstChildOfClass("Humanoid") then
-      LP.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-   end
+    if _G.InfJump and LP.Character and LP.Character:FindFirstChildOfClass("Humanoid") then
+        LP.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
 end)
 
--- Cập nhật Speed, Jump, Noclip
-RunService.Stepped:Connect(function()
-   if LP.Character and LP.Character:FindFirstChild("Humanoid") then
-      LP.Character.Humanoid.WalkSpeed = _G.WalkSpeed
-      LP.Character.Humanoid.JumpPower = _G.JumpPower
-      if _G.NoFallDamage then
-         LP.Character.Humanoid.UseJumpPower = true
-      end
-   end
-   
-   if _G.Noclip_Enabled and LP.Character then
-      for _, v in pairs(LP.Character:GetDescendants()) do
-         if v:IsA("BasePart") then v.CanCollide = false end
-      end
-   end
-end)
-
--- ESP và Aimbot Render
+-- Aimbot + ESP
 RunService.RenderStepped:Connect(function()
-   -- ESP
-   if _G.ESP_Enabled then
-      for _, player in pairs(game.Players:GetPlayers()) do
-         if player ~= LP and player.Character then
-            if not ESPObjects[player] then
-               CreateAdvancedESP(player)
-            elseif ESPObjects[player].DistLabel and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
-               local dist = (LP.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-               ESPObjects[player].DistLabel.Text = string.format("%.1fm", dist)
+    -- AIMBOT
+    if _G.Aimbot then
+        local closest, closestDist = nil, _G.AimbotFOV
+        local center = Camera.ViewportSize / 2
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= LP and v.Character and v.Character:FindFirstChild(_G.AimbotPart) then
+                local pos, onScreen = Camera:WorldToScreenPoint(v.Character[_G.AimbotPart].Position)
+                if onScreen then
+                    local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                    if dist < closestDist then
+                        closestDist = dist
+                        closest = v
+                    end
+                end
             end
-         elseif ESPObjects[player] then
-            if ESPObjects[player].Highlight then ESPObjects[player].Highlight:Destroy() end
-            if ESPObjects[player].Billboard then ESPObjects[player].Billboard:Destroy() end
-            ESPObjects[player] = nil
-         end
-      end
-   end
-   
-   -- Aimbot
-   if _G.Aimbot_Enabled then
-      local target = nil
-      local closestDist = 400
-      for _, v in pairs(game.Players:GetPlayers()) do
-         if v ~= LP and v.Character and v.Character:FindFirstChild("Head") then
-            local pos, onScreen = Camera:WorldToScreenPoint(v.Character.Head.Position)
-            if onScreen then
-               local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-               if d < closestDist then target = v; closestDist = d end
+        end
+        if closest then
+            TargetLabel:Set("🎯 TARGET: " .. closest.Name)
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closest.Character[_G.AimbotPart].Position)
+        else
+            TargetLabel:Set("🎯 TARGET: Không có")
+        end
+    end
+    
+    -- ESP
+    if _G.ESP then
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= LP and v.Character then
+                if not v.Character:FindFirstChild("ESP_Box") then
+                    local h = Instance.new("Highlight")
+                    h.Name = "ESP_Box"
+                    h.FillColor = _G.ESPColor
+                    h.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    h.FillTransparency = 0.5
+                    h.Parent = v.Character
+                end
+                if _G.ShowNames and not v.Character:FindFirstChild("ESP_Name") then
+                    local bill = Instance.new("BillboardGui")
+                    bill.Name = "ESP_Name"
+                    bill.Adornee = v.Character:FindFirstChild("Head") or v.Character:FindFirstChild("HumanoidRootPart")
+                    bill.Size = UDim2.new(0, 120, 0, 35)
+                    bill.StudsOffset = Vector3.new(0, 2.5, 0)
+                    bill.AlwaysOnTop = true
+                    bill.Parent = v.Character
+                    local frame = Instance.new("Frame", bill)
+                    frame.Size = UDim2.new(1, 0, 1, 0)
+                    frame.BackgroundTransparency = 0.3
+                    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                    local name = Instance.new("TextLabel", frame)
+                    name.Size = UDim2.new(1, 0, 0.6, 0)
+                    name.BackgroundTransparency = 1
+                    name.Text = v.Name
+                    name.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    name.TextScaled = true
+                    if _G.ShowDistance then
+                        local dist = Instance.new("TextLabel", frame)
+                        dist.Size = UDim2.new(1, 0, 0.4, 0)
+                        dist.Position = UDim2.new(0, 0, 0.6, 0)
+                        dist.BackgroundTransparency = 1
+                        dist.TextColor3 = Color3.fromRGB(255, 200, 0)
+                        dist.TextScaled = true
+                        spawn(function()
+                            while v.Character and LP.Character do
+                                task.wait(0.1)
+                                local d = (LP.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
+                                dist.Text = string.format("%.1fm", d)
+                                if not _G.ESP then break end
+                            end
+                        end)
+                    end
+                end
             end
-         end
-      end
-      if target and target.Character and target.Character:FindFirstChild("Head") then
-         Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position)
-      end
-   end
+        end
+    end
 end)
 
--- Xử lý khi có player mới
-game.Players.PlayerAdded:Connect(function(player)
-   if _G.ESP_Enabled then
-      player.CharacterAdded:Connect(function()
-         task.wait(0.5)
-         if _G.ESP_Enabled then CreateAdvancedESP(player) end
-      end)
-   end
-end)
+-- Cập nhật dropdown khi có player mới
+game.Players.PlayerAdded:Connect(function() PlayerDrop:Refresh(GetPlayers()) end)
+game.Players.PlayerRemoving:Connect(function() PlayerDrop:Refresh(GetPlayers()) end)
 
--- Xử lý khi character respawn
-LP.CharacterAdded:Connect(function()
-   task.wait(1)
-   if _G.Fly_Enabled then
-      _G.Fly_Enabled = false
-      if FlyBV then FlyBV:Destroy() end
-      if FlyBG then FlyBG:Destroy() end
-   end
-end)
+-- Thông báo
+Rayfield:Notify({
+    Title = "⭐ VIP ULTRA MENU",
+    Content = "6 TAB ĐẦY ĐỦ | BẬT/TẮT TỪNG TÍNH NĂNG",
+    Duration = 5
+})
+
+print("========== MENU ĐÃ SẴN SÀNG ==========")
+print("6 TAB: GOD MODE | AIMBOT | ESP | FLY | CHẾ MODE | TIỆN ÍCH")
+print("TẤT CẢ TÍNH NĂNG ĐỀU CÓ BẬT/TẮT")
+print("======================================")
